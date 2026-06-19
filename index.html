@@ -3,147 +3,266 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DnD Character Manager</title>
-
+    <title>D&D Character Manager</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
 <div class="container">
-
-    <div id="wizard">
-
-        <section class="screen active" id="screen-name">
-            <h1>DnD Character Manager</h1>
-
-            <h2>Имя персонажа</h2>
-
-            <input
-                type="text"
-                id="characterName"
-                placeholder="Введите имя">
-
-            <button onclick="nextScreen('screen-race')">
-                Далее
-            </button>
-        </section>
-
-        <section class="screen" id="screen-race">
-
-            <h2>Выберите расу</h2>
-
-            <div class="cards">
-
-                <div class="card"
-                     onclick="selectRace('Человек')">
-                    <h3>Человек</h3>
-                    <p>+1 ко всем характеристикам</p>
-                </div>
-
-                <div class="card"
-                     onclick="selectRace('Эльф')">
-                    <h3>Эльф</h3>
-                    <p>+2 Ловкость</p>
-                </div>
-
+    <!-- ЭКРАН 1: Главная -->
+    <section class="screen active" id="screen-home">
+        <div class="hero">
+            <h1>D&D Character Manager</h1>
+            <p>Создай и веди своего героя прямо в браузере</p>
+            <div class="main-actions">
+                <button onclick="nextScreen('screen-name')">Создать персонажа</button>
+                <button id="loadGameBtn" class="btn-secondary hidden" onclick="loadGame()">Продолжить игру</button>
+                <button onclick="document.getElementById('importFileMain').click()" class="btn-export">Импорт (TXT)</button>
+                <input type="file" id="importFileMain" accept=".txt" class="hidden" onchange="importTXT(event)">
             </div>
-
-        </section>
-
-        <section class="screen" id="screen-class">
-
-            <h2>Выберите класс</h2>
-
-            <div class="cards">
-
-                <div class="card"
-                     onclick="selectClass('Воин')">
-
-                    <h3>Воин</h3>
-                    <p>HP 12</p>
-
-                </div>
-
-                <div class="card"
-                     onclick="selectClass('Маг')">
-
-                    <h3>Маг</h3>
-                    <p>HP 8</p>
-
-                </div>
-
-            </div>
-
-        </section>
-
-        <section class="screen" id="screen-stats">
-
-            <h2>Характеристики</h2>
-
-            <div id="stats"></div>
-
-            <button onclick="generateStats()">
-                Перебросить
-            </button>
-
-            <button onclick="finishCreation()">
-                Создать персонажа
-            </button>
-
-        </section>
-
-    </div>
-
-    <section id="sheet" class="hidden">
-
-        <h1 id="sheetName"></h1>
-
-        <div class="sheet-grid">
-
-            <div class="panel">
-                <h3>Основное</h3>
-
-                <p>Раса: <span id="sheetRace"></span></p>
-                <p>Класс: <span id="sheetClass"></span></p>
-                <p>Уровень: <span id="sheetLevel"></span></p>
-                <p>XP: <span id="sheetXP"></span></p>
-            </div>
-
-            <div class="panel">
-                <h3>Характеристики</h3>
-
-                <div id="sheetStats"></div>
-            </div>
-
-            <div class="panel">
-                <h3>Способности</h3>
-
-                <ul id="sheetSkills"></ul>
-            </div>
-
         </div>
-
-        <div class="actions">
-
-            <button onclick="addXP(50)">
-                +50 XP
-            </button>
-
-            <button onclick="addXP(100)">
-                +100 XP
-            </button>
-
-            <button onclick="saveCharacter()">
-                Сохранить
-            </button>
-
-        </div>
-
     </section>
 
+    <!-- ЭКРАН 2: Имя -->
+    <section class="screen" id="screen-name">
+        <h1>Создание персонажа</h1>
+        <h2>Как зовут вашего героя?</h2>
+        <input type="text" id="characterName" placeholder="Введите имя...">
+        <button onclick="setName()">Далее</button>
+    </section>
+
+    <!-- ЭКРАН 3: Раса -->
+    <section class="screen" id="screen-race">
+        <h2>Выберите расу</h2>
+        <div class="cards">
+            <div class="card" onclick="setRace('Человек')"><h3>Человек</h3><p>+1 ко всем характеристикам.</p></div>
+            <div class="card" onclick="setRace('Эльф')"><h3>Эльф</h3><p>+2 к Ловкости.</p></div>
+            <div class="card" onclick="setRace('Гном')"><h3>Гном</h3><p>+2 к Интеллекту. Хитрые и изобретательные.</p></div>
+        </div>
+    </section>
+
+    <!-- ЭКРАН 4: Класс -->
+    <section class="screen" id="screen-class">
+        <h2>Выберите класс</h2>
+        <div class="cards">
+            <div class="card" onclick="setClass('Воин')"><h3>Воин</h3><p class="accent">HP: 12 | Снаряжение: Меч, Щит</p></div>
+            <div class="card" onclick="setClass('Маг')"><h3>Маг</h3><p class="accent">HP: 8 | Снаряжение: Посох, Книга</p></div>
+            <div class="card" onclick="setClass('Жрец')"><h3>Жрец</h3><p class="accent">HP: 10 | Снаряжение: Булава, Щит</p></div>
+        </div>
+    </section>
+
+    <!-- ЭКРАН 5: Характеристики -->
+    <section class="screen" id="screen-stats">
+        <h2>Характеристики</h2>
+        <div id="stats-grid" class="stats-grid"></div>
+        <div class="actions">
+            <button onclick="generateStats()" class="btn-secondary">Перебросить</button>
+            <button onclick="nextScreen('screen-background')">Далее</button>
+        </div>
+    </section>
+
+    <!-- ЭКРАН 6: Предыстория -->
+    <section class="screen" id="screen-background">
+        <h2>Выберите предысторию</h2>
+        <div class="cards">
+            <div class="card" onclick="setBackground('Солдат')"><h3>Солдат</h3></div>
+            <div class="card" onclick="setBackground('Учёный')"><h3>Учёный</h3></div>
+            <div class="card" onclick="setBackground('Благородный')"><h3>Благородный</h3></div>
+            <div class="card" onclick="setBackground('Отшельник')"><h3>Отшельник</h3></div>
+        </div>
+    </section>
+
+    <!-- ЭКРАН 7: Интерактивный лист персонажа -->
+    <section class="screen" id="screen-sheet">
+        <div class="dnd-sheet main-sheet">
+            <!-- ШАПКА -->
+            <div class="sheet-header">
+                <div class="char-name-box">
+                    <input type="text" id="sheet-name" oninput="updateChar('name', this.value)" placeholder="Имя героя">
+                    <label>ИМЯ ПЕРСОНАЖА</label>
+                </div>
+                <div class="char-info-grid">
+                    <div class="info-field"><input type="text" id="sheet-class" oninput="updateChar('class', this.value)"><label>КЛАСС И УРОВЕНЬ</label></div>
+                    <div class="info-field"><input type="text" id="sheet-bg" oninput="updateChar('background', this.value)"><label>ПРЕДЫСТОРИЯ</label></div>
+                    <div class="info-field"><input type="text" placeholder="Имя игрока"><label>ИМЯ ИГРОКА</label></div>
+                    <div class="info-field"><input type="text" id="sheet-race" oninput="updateChar('race', this.value)"><label>РАСА</label></div>
+                    <div class="info-field"><input type="text" placeholder="Мировоззрение"><label>МИРОВОЗЗРЕНИЕ</label></div>
+                    <div class="info-field"><input type="number" id="sheet-xp" oninput="updateChar('xp', Number(this.value))"><label>ОПЫТ</label></div>
+                </div>
+            </div>
+
+            <!-- ТЕЛО ЛИСТА (Компактное) -->
+            <div class="sheet-body compact-body">
+                
+                <!-- 1. КОЛОНКА СТАТОВ -->
+                <div class="col-stats">
+                    <div class="stat-box"><label>СИЛА</label><input type="text" id="sheet-str-mod" class="stat-mod" readonly><div class="stat-score-bubble"><input type="number" id="sheet-str" oninput="updateStat('strength', this.value)"></div></div>
+                    <div class="stat-box"><label>ЛОВКОСТЬ</label><input type="text" id="sheet-dex-mod" class="stat-mod" readonly><div class="stat-score-bubble"><input type="number" id="sheet-dex" oninput="updateStat('dexterity', this.value)"></div></div>
+                    <div class="stat-box"><label>ВЫНОСЛИВ.</label><input type="text" id="sheet-con-mod" class="stat-mod" readonly><div class="stat-score-bubble"><input type="number" id="sheet-con" oninput="updateStat('constitution', this.value)"></div></div>
+                    <div class="stat-box"><label>ИНТЕЛЛЕКТ</label><input type="text" id="sheet-int-mod" class="stat-mod" readonly><div class="stat-score-bubble"><input type="number" id="sheet-int" oninput="updateStat('intelligence', this.value)"></div></div>
+                    <div class="stat-box"><label>МУДРОСТЬ</label><input type="text" id="sheet-wis-mod" class="stat-mod" readonly><div class="stat-score-bubble"><input type="number" id="sheet-wis" oninput="updateStat('wisdom', this.value)"></div></div>
+                    <div class="stat-box"><label>ХАРИЗМА</label><input type="text" id="sheet-cha-mod" class="stat-mod" readonly><div class="stat-score-bubble"><input type="number" id="sheet-cha" oninput="updateStat('charisma', this.value)"></div></div>
+                </div>
+
+                <!-- 2. БОЕВОЙ БЛОК (Центр) -->
+                <div class="col-center">
+                    <div class="combat-row">
+                        <div class="shield-box"><input type="text" id="sheet-ac" oninput="updateChar('ac', this.value)"><label>КД</label></div>
+                        <div class="framed-box init-box" style="background:#f0f0f0;"><input type="text" id="sheet-init" readonly><label class="bottom-label">ИНИЦИАТИВА</label></div>
+                        <div class="framed-box speed-box"><input type="text" id="sheet-speed" oninput="updateChar('speed', this.value)"><label class="bottom-label">СКОРОСТЬ</label></div>
+                    </div>
+
+                    <div class="hp-box framed-box">
+                        <div class="hp-max-row"><span class="muted-text">Максимум ПЗ</span><input type="number" id="sheet-maxhp" oninput="updateChar('maxHp', this.value)"></div>
+                        <div class="hp-current-container"><input type="number" class="hp-current" id="sheet-hp" oninput="updateChar('hp', this.value)"></div>
+                        <label class="bottom-label">ТЕКУЩИЕ ХИТЫ</label>
+                    </div>
+
+                    <div class="attacks-box framed-box">
+                        <textarea id="sheet-attacks" oninput="updateChar('attacks', this.value)" placeholder="Название     | Бонус | Урон"></textarea>
+                        <label class="bottom-label">АТАКИ И ЗАКЛИНАНИЯ (Быстрый доступ)</label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ПАНЕЛЬ КНОПОК ДЛЯ ОТКРЫТИЯ ВКЛАДОК -->
+            <div class="panel-buttons">
+                <button class="btn-panel" onclick="openModal('modal-skills')">⚔️ Навыки и Испытания</button>
+                <button class="btn-panel" onclick="openModal('modal-prof')">📜 Прочие владения и языки</button>
+                <button class="btn-panel" onclick="openModal('modal-equipment')">🎒 Снаряжение и Монеты</button>
+                <button class="btn-panel" onclick="openModal('modal-features')">✨ Умения и Особенности</button>
+            </div>
+        </div>
+
+        <!-- Управление сохранением -->
+        <div class="game-actions">
+            <button onclick="addXP(50)" class="btn-xp">+50 XP</button>
+            <button onclick="addXP(100)" class="btn-xp">+100 XP</button>
+            <span style="border-left: 2px solid #374151; margin: 0 10px;"></span>
+            <button onclick="exportTXT()" class="btn-export">Экспорт (TXT)</button>
+            <button onclick="document.getElementById('importFileSheet').click()" class="btn-secondary">Импорт (TXT)</button>
+            <input type="file" id="importFileSheet" accept=".txt" class="hidden" onchange="importTXT(event)">
+            <span style="border-left: 2px solid #374151; margin: 0 10px;"></span>
+            <button onclick="nextScreen('screen-home')" class="btn-secondary">В меню</button>
+        </div>
+    </section>
+    
+    <!-- ПЛАВАЮЩИЙ КУБИК -->
+    <div id="dice-roller" class="dice-roller hidden">
+        <h4>Бросок кубика</h4>
+        <div class="dice-buttons">
+            <button onclick="rollDice(4)">d4</button><button onclick="rollDice(6)">d6</button>
+            <button onclick="rollDice(8)">d8</button><button onclick="rollDice(10)">d10</button>
+            <button onclick="rollDice(12)">d12</button><button onclick="rollDice(20)" style="border-color: var(--gold);">d20</button>
+        </div>
+        <div id="dice-result" class="dice-result">-</div>
+    </div>
+</div>
+
+<!-- ================= МОДАЛЬНЫЕ ОКНА (ВКЛАДКИ) ================= -->
+
+<div id="modal-skills" class="modal-backdrop hidden" onclick="closeOnBackdrop(event, 'modal-skills')">
+    <div class="modal-content dnd-sheet flex-col">
+        <button class="modal-close" onclick="closeModal('modal-skills')">✖</button>
+        <h2 class="modal-title">Навыки и Испытания</h2>
+        
+        <div style="display:flex; gap:20px; margin-bottom: 20px;">
+            <div class="simple-box inline-box" style="flex:1;"><input type="text" id="sheet-insp" oninput="updateChar('inspiration', this.value)"><label>ВДОХНОВЕНИЕ</label></div>
+            <div class="simple-box inline-box" style="flex:1; background:#f0f0f0;"><input type="text" id="sheet-prof" readonly><label>БОНУС УМЕНИЯ</label></div>
+            <div class="simple-box inline-box" style="flex:1; background:#f0f0f0;"><input type="text" id="sheet-pass-perc" readonly><label>ПАССИВ. ВНИМАНИЕ</label></div>
+        </div>
+
+        <div style="display:flex; gap:20px;">
+            <div class="framed-box list-box" style="flex:1;">
+                <div class="list-row"><input type="checkbox" id="sv-str" onchange="toggleProficiency('savesProf', 'str', this.checked)"><input type="text" id="sv-str-val" readonly><label>Сила</label></div>
+                <div class="list-row"><input type="checkbox" id="sv-dex" onchange="toggleProficiency('savesProf', 'dex', this.checked)"><input type="text" id="sv-dex-val" readonly><label>Ловкость</label></div>
+                <div class="list-row"><input type="checkbox" id="sv-con" onchange="toggleProficiency('savesProf', 'con', this.checked)"><input type="text" id="sv-con-val" readonly><label>Выносливость</label></div>
+                <div class="list-row"><input type="checkbox" id="sv-int" onchange="toggleProficiency('savesProf', 'int', this.checked)"><input type="text" id="sv-int-val" readonly><label>Интеллект</label></div>
+                <div class="list-row"><input type="checkbox" id="sv-wis" onchange="toggleProficiency('savesProf', 'wis', this.checked)"><input type="text" id="sv-wis-val" readonly><label>Мудрость</label></div>
+                <div class="list-row"><input type="checkbox" id="sv-cha" onchange="toggleProficiency('savesProf', 'cha', this.checked)"><input type="text" id="sv-cha-val" readonly><label>Харизма</label></div>
+                <label class="bottom-label">ИСПЫТАНИЯ</label>
+            </div>
+
+            <div class="framed-box list-box skills-box" style="flex:2;">
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                    <div>
+                        <div class="list-row"><input type="checkbox" id="sk-acr" onchange="toggleProficiency('skillsProf', 'acr', this.checked)"><input type="text" id="sk-acr-val" readonly><label>Акробатика (Лов)</label></div>
+                        <div class="list-row"><input type="checkbox" id="sk-ath" onchange="toggleProficiency('skillsProf', 'ath', this.checked)"><input type="text" id="sk-ath-val" readonly><label>Атлетика (Сил)</label></div>
+                        <div class="list-row"><input type="checkbox" id="sk-prc" onchange="toggleProficiency('skillsProf', 'prc', this.checked)"><input type="text" id="sk-prc-val" readonly><label>Внимание (Муд)</label></div>
+                        <div class="list-row"><input type="checkbox" id="sk-sur" onchange="toggleProficiency('skillsProf', 'sur', this.checked)"><input type="text" id="sk-sur-val" readonly><label>Выживание (Муд)</label></div>
+                        <div class="list-row"><input type="checkbox" id="sk-ani" onchange="toggleProficiency('skillsProf', 'ani', this.checked)"><input type="text" id="sk-ani-val" readonly><label>Дрессировка (Муд)</label></div>
+                        <div class="list-row"><input type="checkbox" id="sk-inti" onchange="toggleProficiency('skillsProf', 'inti', this.checked)"><input type="text" id="sk-inti-val" readonly><label>Запугивание (Хар)</label></div>
+                        <div class="list-row"><input type="checkbox" id="sk-prf" onchange="toggleProficiency('skillsProf', 'prf', this.checked)"><input type="text" id="sk-prf-val" readonly><label>Исполнение (Хар)</label></div>
+                        <div class="list-row"><input type="checkbox" id="sk-his" onchange="toggleProficiency('skillsProf', 'his', this.checked)"><input type="text" id="sk-his-val" readonly><label>История (Инт)</label></div>
+                        <div class="list-row"><input type="checkbox" id="sk-slg" onchange="toggleProficiency('skillsProf', 'slg', this.checked)"><input type="text" id="sk-slg-val" readonly><label>Ловкость рук (Лов)</label></div>
+                    </div>
+                    <div>
+                        <div class="list-row"><input type="checkbox" id="sk-arc" onchange="toggleProficiency('skillsProf', 'arc', this.checked)"><input type="text" id="sk-arc-val" readonly><label>Магия (Инт)</label></div>
+                        <div class="list-row"><input type="checkbox" id="sk-med" onchange="toggleProficiency('skillsProf', 'med', this.checked)"><input type="text" id="sk-med-val" readonly><label>Медицина (Муд)</label></div>
+                        <div class="list-row"><input type="checkbox" id="sk-dec" onchange="toggleProficiency('skillsProf', 'dec', this.checked)"><input type="text" id="sk-dec-val" readonly><label>Обман (Хар)</label></div>
+                        <div class="list-row"><input type="checkbox" id="sk-nat" onchange="toggleProficiency('skillsProf', 'nat', this.checked)"><input type="text" id="sk-nat-val" readonly><label>Природа (Инт)</label></div>
+                        <div class="list-row"><input type="checkbox" id="sk-ins" onchange="toggleProficiency('skillsProf', 'ins', this.checked)"><input type="text" id="sk-ins-val" readonly><label>Проницател-ть (Муд)</label></div>
+                        <div class="list-row"><input type="checkbox" id="sk-inv" onchange="toggleProficiency('skillsProf', 'inv', this.checked)"><input type="text" id="sk-inv-val" readonly><label>Расследование (Инт)</label></div>
+                        <div class="list-row"><input type="checkbox" id="sk-rel" onchange="toggleProficiency('skillsProf', 'rel', this.checked)"><input type="text" id="sk-rel-val" readonly><label>Религия (Инт)</label></div>
+                        <div class="list-row"><input type="checkbox" id="sk-ste" onchange="toggleProficiency('skillsProf', 'ste', this.checked)"><input type="text" id="sk-ste-val" readonly><label>Скрытность (Лов)</label></div>
+                        <div class="list-row"><input type="checkbox" id="sk-per" onchange="toggleProficiency('skillsProf', 'per', this.checked)"><input type="text" id="sk-per-val" readonly><label>Убеждение (Хар)</label></div>
+                    </div>
+                </div>
+                <label class="bottom-label">НАВЫКИ</label>
+            </div>
+        </div>
+        <div class="modal-footer"><button class="btn-secondary" onclick="closeModal('modal-skills')">Закрыть</button></div>
+    </div>
+</div>
+
+<div id="modal-prof" class="modal-backdrop hidden" onclick="closeOnBackdrop(event, 'modal-prof')">
+    <div class="modal-content dnd-sheet flex-col" style="height: 60vh;">
+        <button class="modal-close" onclick="closeModal('modal-prof')">✖</button>
+        <h2 class="modal-title">Прочие владения и языки</h2>
+        <div class="framed-box" style="flex: 1;">
+            <textarea id="sheet-proficiencies" oninput="updateChar('proficiencies', this.value)" placeholder="Напишите здесь языки, которыми владеете, и инструменты..."></textarea>
+        </div>
+        <div class="modal-footer"><button class="btn-secondary" onclick="closeModal('modal-prof')">Закрыть</button></div>
+    </div>
+</div>
+
+<div id="modal-equipment" class="modal-backdrop hidden" onclick="closeOnBackdrop(event, 'modal-equipment')">
+    <div class="modal-content dnd-sheet flex-col" style="height: 70vh;">
+        <button class="modal-close" onclick="closeModal('modal-equipment')">✖</button>
+        <h2 class="modal-title">Снаряжение и Монеты</h2>
+        <div class="equipment-box framed-box" style="flex: 1;">
+            <div class="equipment-container">
+                <div class="money-col">
+                    <div class="money-box"><label>ММ</label><input type="text" id="coin-cp" oninput="updateNested('money', 'cp', this.value)"></div>
+                    <div class="money-box"><label>СМ</label><input type="text" id="coin-sp" oninput="updateNested('money', 'sp', this.value)"></div>
+                    <div class="money-box"><label>ЭМ</label><input type="text" id="coin-ep" oninput="updateNested('money', 'ep', this.value)"></div>
+                    <div class="money-box"><label>ЗМ</label><input type="text" id="coin-gp" oninput="updateNested('money', 'gp', this.value)"></div>
+                    <div class="money-box"><label>ПМ</label><input type="text" id="coin-pp" oninput="updateNested('money', 'pp', this.value)"></div>
+                </div>
+                <textarea id="sheet-equipment" oninput="updateChar('equipment', this.value)" placeholder="Ваш инвентарь..."></textarea>
+            </div>
+        </div>
+        <div class="modal-footer"><button class="btn-secondary" onclick="closeModal('modal-equipment')">Закрыть</button></div>
+    </div>
+</div>
+
+<div id="modal-features" class="modal-backdrop hidden" onclick="closeOnBackdrop(event, 'modal-features')">
+    <div class="modal-content dnd-sheet flex-col" style="height: 80vh;">
+        <button class="modal-close" onclick="closeModal('modal-features')">✖</button>
+        <h2 class="modal-title">Умения и Особенности</h2>
+        <div class="personality-container" style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;">
+            <div class="traits-box framed-box"><textarea id="sheet-traits" oninput="updateChar('traits', this.value)"></textarea><label class="bottom-label">ЧЕРТЫ ХАРАКТЕРА</label></div>
+            <div class="traits-box framed-box"><textarea id="sheet-ideals" oninput="updateChar('ideals', this.value)"></textarea><label class="bottom-label">ИДЕАЛЫ</label></div>
+            <div class="traits-box framed-box"><textarea id="sheet-bonds" oninput="updateChar('bonds', this.value)"></textarea><label class="bottom-label">УЗЫ / ПРИВЯЗАННОСТИ</label></div>
+            <div class="traits-box framed-box"><textarea id="sheet-flaws" oninput="updateChar('flaws', this.value)"></textarea><label class="bottom-label">СЛАБОСТИ</label></div>
+        </div>
+        <div class="features-box framed-box" style="flex: 1;">
+            <textarea id="sheet-features" oninput="updateChar('features', this.value)" placeholder="Опишите ваши расовые и классовые особенности..."></textarea>
+        </div>
+        <div class="modal-footer"><button class="btn-secondary" onclick="closeModal('modal-features')">Закрыть</button></div>
+    </div>
 </div>
 
 <script src="app.js"></script>
-
 </body>
 </html>
