@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DnD Character Manager</title>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="container">
+
+    <div id="wizard">
+
+        <section class="screen active" id="screen-name">
+            <h1>DnD Character Manager</h1>
+
+            <h2>Имя персонажа</h2>
+
+            <input
+                type="text"
+                id="characterName"
+                placeholder="Введите имя">
+
+            <button onclick="nextScreen('screen-race')">
+                Далее
+            </button>
+        </section>
+
+        <section class="screen" id="screen-race">
+
+            <h2>Выберите расу</h2>
+
+            <div class="cards">
+
+                <div class="card"
+                     onclick="selectRace('Человек')">
+                    <h3>Человек</h3>
+                    <p>+1 ко всем характеристикам</p>
+                </div>
+
+                <div class="card"
+                     onclick="selectRace('Эльф')">
+                    <h3>Эльф</h3>
+                    <p>+2 Ловкость</p>
+                </div>
+
+            </div>
+
+        </section>
+
+        <section class="screen" id="screen-class">
+
+            <h2>Выберите класс</h2>
+
+            <div class="cards">
+
+                <div class="card"
+                     onclick="selectClass('Воин')">
+
+                    <h3>Воин</h3>
+                    <p>HP 12</p>
+
+                </div>
+
+                <div class="card"
+                     onclick="selectClass('Маг')">
+
+                    <h3>Маг</h3>
+                    <p>HP 8</p>
+
+                </div>
+
+            </div>
+
+        </section>
+
+        <section class="screen" id="screen-stats">
+
+            <h2>Характеристики</h2>
+
+            <div id="stats"></div>
+
+            <button onclick="generateStats()">
+                Перебросить
+            </button>
+
+            <button onclick="finishCreation()">
+                Создать персонажа
+            </button>
+
+        </section>
+
+    </div>
+
+    <section id="sheet" class="hidden">
+
+        <h1 id="sheetName"></h1>
+
+        <div class="sheet-grid">
+
+            <div class="panel">
+                <h3>Основное</h3>
+
+                <p>Раса: <span id="sheetRace"></span></p>
+                <p>Класс: <span id="sheetClass"></span></p>
+                <p>Уровень: <span id="sheetLevel"></span></p>
+                <p>XP: <span id="sheetXP"></span></p>
+            </div>
+
+            <div class="panel">
+                <h3>Характеристики</h3>
+
+                <div id="sheetStats"></div>
+            </div>
+
+            <div class="panel">
+                <h3>Способности</h3>
+
+                <ul id="sheetSkills"></ul>
+            </div>
+
+        </div>
+
+        <div class="actions">
+
+            <button onclick="addXP(50)">
+                +50 XP
+            </button>
+
+            <button onclick="addXP(100)">
+                +100 XP
+            </button>
+
+            <button onclick="saveCharacter()">
+                Сохранить
+            </button>
+
+        </div>
+
+    </section>
+
+</div>
+
+<script src="app.js"></script>
+
+</body>
+</html>
