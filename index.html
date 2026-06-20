@@ -45,9 +45,10 @@
     <section class="screen" id="screen-class">
         <h2>Выберите класс</h2>
         <div class="cards">
-            <div class="card" onclick="setClass('Воин')"><h3>Воин</h3><p class="accent">HP: 12 | Снаряжение: Меч, Щит</p></div>
-            <div class="card" onclick="setClass('Маг')"><h3>Маг</h3><p class="accent">HP: 8 | Снаряжение: Посох, Книга</p></div>
-            <div class="card" onclick="setClass('Жрец')"><h3>Жрец</h3><p class="accent">HP: 10 | Снаряжение: Булава, Щит</p></div>
+            <div class="card" onclick="setClass('Воин')"><h3>Воин</h3><p class="accent">HP: 10 + ТЕЛ | Меч, Щит</p></div>
+            <div class="card" onclick="setClass('Волшебник')"><h3>Волшебник</h3><p class="accent">HP: 6 + ТЕЛ | Посох, Книга</p></div>
+            <div class="card" onclick="setClass('Жрец')"><h3>Жрец</h3><p class="accent">HP: 8 + ТЕЛ | Булава, Щит</p></div>
+            <div class="card" onclick="setClass('Бард')"><h3>Бард</h3><p class="accent">HP: 8 + ТЕЛ | Рапира, Лютня</p></div>
         </div>
     </section>
 
@@ -98,7 +99,7 @@
                 <div class="col-stats">
                     <div class="stat-box"><label>СИЛА</label><input type="text" id="sheet-str-mod" class="stat-mod" readonly><div class="stat-score-bubble"><input type="number" id="sheet-str" oninput="updateStat('strength', this.value)"></div></div>
                     <div class="stat-box"><label>ЛОВКОСТЬ</label><input type="text" id="sheet-dex-mod" class="stat-mod" readonly><div class="stat-score-bubble"><input type="number" id="sheet-dex" oninput="updateStat('dexterity', this.value)"></div></div>
-                    <div class="stat-box"><label>ВЫНОСЛИВ.</label><input type="text" id="sheet-con-mod" class="stat-mod" readonly><div class="stat-score-bubble"><input type="number" id="sheet-con" oninput="updateStat('constitution', this.value)"></div></div>
+                    <div class="stat-box"><label>ТЕЛОСЛОЖ.</label><input type="text" id="sheet-con-mod" class="stat-mod" readonly><div class="stat-score-bubble"><input type="number" id="sheet-con" oninput="updateStat('constitution', this.value)"></div></div>
                     <div class="stat-box"><label>ИНТЕЛЛЕКТ</label><input type="text" id="sheet-int-mod" class="stat-mod" readonly><div class="stat-score-bubble"><input type="number" id="sheet-int" oninput="updateStat('intelligence', this.value)"></div></div>
                     <div class="stat-box"><label>МУДРОСТЬ</label><input type="text" id="sheet-wis-mod" class="stat-mod" readonly><div class="stat-score-bubble"><input type="number" id="sheet-wis" oninput="updateStat('wisdom', this.value)"></div></div>
                     <div class="stat-box"><label>ХАРИЗМА</label><input type="text" id="sheet-cha-mod" class="stat-mod" readonly><div class="stat-score-bubble"><input type="number" id="sheet-cha" oninput="updateStat('charisma', this.value)"></div></div>
@@ -112,9 +113,14 @@
                         <div class="framed-box speed-box"><input type="text" id="sheet-speed" oninput="updateChar('speed', this.value)"><label class="bottom-label">СКОРОСТЬ</label></div>
                     </div>
 
+                    <!-- ОБНОВЛЕННЫЙ БЛОК ЗДОРОВЬЯ -->
                     <div class="hp-box framed-box">
                         <div class="hp-max-row"><span class="muted-text">Максимум ПЗ</span><input type="number" id="sheet-maxhp" oninput="updateChar('maxHp', this.value)"></div>
-                        <div class="hp-current-container"><input type="number" class="hp-current" id="sheet-hp" oninput="updateChar('hp', this.value)"></div>
+                        <div class="hp-current-container">
+                            <button class="hp-btn hp-minus" onclick="changeHP(-1)">-</button>
+                            <input type="number" class="hp-current" id="sheet-hp" oninput="updateChar('hp', this.value)">
+                            <button class="hp-btn hp-plus" onclick="changeHP(1)">+</button>
+                        </div>
                         <label class="bottom-label">ТЕКУЩИЕ ХИТЫ</label>
                     </div>
 
@@ -136,8 +142,8 @@
 
         <!-- Управление сохранением -->
         <div class="game-actions">
+            <button onclick="addXP(10)" class="btn-xp">+10 XP</button>
             <button onclick="addXP(50)" class="btn-xp">+50 XP</button>
-            <button onclick="addXP(100)" class="btn-xp">+100 XP</button>
             <span style="border-left: 2px solid #374151; margin: 0 10px;"></span>
             <button onclick="exportTXT()" class="btn-export">Экспорт (TXT)</button>
             <button onclick="document.getElementById('importFileSheet').click()" class="btn-secondary">Импорт (TXT)</button>
@@ -147,15 +153,18 @@
         </div>
     </section>
     
-    <!-- ПЛАВАЮЩИЙ КУБИК -->
-    <div id="dice-roller" class="dice-roller hidden">
-        <h4>Бросок кубика</h4>
-        <div class="dice-buttons">
-            <button onclick="rollDice(4)">d4</button><button onclick="rollDice(6)">d6</button>
-            <button onclick="rollDice(8)">d8</button><button onclick="rollDice(10)">d10</button>
-            <button onclick="rollDice(12)">d12</button><button onclick="rollDice(20)" style="border-color: var(--gold);">d20</button>
+    <!-- ПЛАВАЮЩИЙ КУБИК (Мобильный) -->
+    <div id="dice-container" class="dice-container hidden">
+        <div id="dice-menu" class="dice-menu hidden">
+            <h4 style="margin-top:0; margin-bottom:10px; color:var(--gold);">Бросок</h4>
+            <div class="dice-buttons">
+                <button onclick="rollDice(4)">d4</button><button onclick="rollDice(6)">d6</button>
+                <button onclick="rollDice(8)">d8</button><button onclick="rollDice(10)">d10</button>
+                <button onclick="rollDice(12)">d12</button><button onclick="rollDice(20)" style="border-color: var(--gold);">d20</button>
+            </div>
+            <div id="dice-result" class="dice-result">-</div>
         </div>
-        <div id="dice-result" class="dice-result">-</div>
+        <button class="dice-toggle" onclick="toggleDiceMenu()">🎲</button>
     </div>
 </div>
 
@@ -176,7 +185,7 @@
             <div class="framed-box list-box" style="flex:1;">
                 <div class="list-row"><input type="checkbox" id="sv-str" onchange="toggleProficiency('savesProf', 'str', this.checked)"><input type="text" id="sv-str-val" readonly><label>Сила</label></div>
                 <div class="list-row"><input type="checkbox" id="sv-dex" onchange="toggleProficiency('savesProf', 'dex', this.checked)"><input type="text" id="sv-dex-val" readonly><label>Ловкость</label></div>
-                <div class="list-row"><input type="checkbox" id="sv-con" onchange="toggleProficiency('savesProf', 'con', this.checked)"><input type="text" id="sv-con-val" readonly><label>Выносливость</label></div>
+                <div class="list-row"><input type="checkbox" id="sv-con" onchange="toggleProficiency('savesProf', 'con', this.checked)"><input type="text" id="sv-con-val" readonly><label>Телосложение</label></div>
                 <div class="list-row"><input type="checkbox" id="sv-int" onchange="toggleProficiency('savesProf', 'int', this.checked)"><input type="text" id="sv-int-val" readonly><label>Интеллект</label></div>
                 <div class="list-row"><input type="checkbox" id="sv-wis" onchange="toggleProficiency('savesProf', 'wis', this.checked)"><input type="text" id="sv-wis-val" readonly><label>Мудрость</label></div>
                 <div class="list-row"><input type="checkbox" id="sv-cha" onchange="toggleProficiency('savesProf', 'cha', this.checked)"><input type="text" id="sv-cha-val" readonly><label>Харизма</label></div>
@@ -190,14 +199,13 @@
                         <div class="list-row"><input type="checkbox" id="sk-ath" onchange="toggleProficiency('skillsProf', 'ath', this.checked)"><input type="text" id="sk-ath-val" readonly><label>Атлетика (Сил)</label></div>
                         <div class="list-row"><input type="checkbox" id="sk-prc" onchange="toggleProficiency('skillsProf', 'prc', this.checked)"><input type="text" id="sk-prc-val" readonly><label>Внимание (Муд)</label></div>
                         <div class="list-row"><input type="checkbox" id="sk-sur" onchange="toggleProficiency('skillsProf', 'sur', this.checked)"><input type="text" id="sk-sur-val" readonly><label>Выживание (Муд)</label></div>
-                        <div class="list-row"><input type="checkbox" id="sk-ani" onchange="toggleProficiency('skillsProf', 'ani', this.checked)"><input type="text" id="sk-ani-val" readonly><label>Дрессировка (Муд)</label></div>
+                        <div class="list-row"><input type="checkbox" id="sk-prf" onchange="toggleProficiency('skillsProf', 'prf', this.checked)"><input type="text" id="sk-prf-val" readonly><label>Выступление (Хар)</label></div>
                         <div class="list-row"><input type="checkbox" id="sk-inti" onchange="toggleProficiency('skillsProf', 'inti', this.checked)"><input type="text" id="sk-inti-val" readonly><label>Запугивание (Хар)</label></div>
-                        <div class="list-row"><input type="checkbox" id="sk-prf" onchange="toggleProficiency('skillsProf', 'prf', this.checked)"><input type="text" id="sk-prf-val" readonly><label>Исполнение (Хар)</label></div>
                         <div class="list-row"><input type="checkbox" id="sk-his" onchange="toggleProficiency('skillsProf', 'his', this.checked)"><input type="text" id="sk-his-val" readonly><label>История (Инт)</label></div>
                         <div class="list-row"><input type="checkbox" id="sk-slg" onchange="toggleProficiency('skillsProf', 'slg', this.checked)"><input type="text" id="sk-slg-val" readonly><label>Ловкость рук (Лов)</label></div>
+                        <div class="list-row"><input type="checkbox" id="sk-arc" onchange="toggleProficiency('skillsProf', 'arc', this.checked)"><input type="text" id="sk-arc-val" readonly><label>Магия (Инт)</label></div>
                     </div>
                     <div>
-                        <div class="list-row"><input type="checkbox" id="sk-arc" onchange="toggleProficiency('skillsProf', 'arc', this.checked)"><input type="text" id="sk-arc-val" readonly><label>Магия (Инт)</label></div>
                         <div class="list-row"><input type="checkbox" id="sk-med" onchange="toggleProficiency('skillsProf', 'med', this.checked)"><input type="text" id="sk-med-val" readonly><label>Медицина (Муд)</label></div>
                         <div class="list-row"><input type="checkbox" id="sk-dec" onchange="toggleProficiency('skillsProf', 'dec', this.checked)"><input type="text" id="sk-dec-val" readonly><label>Обман (Хар)</label></div>
                         <div class="list-row"><input type="checkbox" id="sk-nat" onchange="toggleProficiency('skillsProf', 'nat', this.checked)"><input type="text" id="sk-nat-val" readonly><label>Природа (Инт)</label></div>
@@ -206,6 +214,7 @@
                         <div class="list-row"><input type="checkbox" id="sk-rel" onchange="toggleProficiency('skillsProf', 'rel', this.checked)"><input type="text" id="sk-rel-val" readonly><label>Религия (Инт)</label></div>
                         <div class="list-row"><input type="checkbox" id="sk-ste" onchange="toggleProficiency('skillsProf', 'ste', this.checked)"><input type="text" id="sk-ste-val" readonly><label>Скрытность (Лов)</label></div>
                         <div class="list-row"><input type="checkbox" id="sk-per" onchange="toggleProficiency('skillsProf', 'per', this.checked)"><input type="text" id="sk-per-val" readonly><label>Убеждение (Хар)</label></div>
+                        <div class="list-row"><input type="checkbox" id="sk-ani" onchange="toggleProficiency('skillsProf', 'ani', this.checked)"><input type="text" id="sk-ani-val" readonly><label>Уход за животными (Муд)</label></div>
                     </div>
                 </div>
                 <label class="bottom-label">НАВЫКИ</label>

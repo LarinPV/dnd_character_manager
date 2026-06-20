@@ -127,7 +127,16 @@ button:hover { background-color: var(--gold-hover); transform: scale(1.05); }
 .hp-max-row { display: flex; justify-content: space-between; border-bottom: 2px solid #eee; padding-bottom: 8px;}
 .hp-max-row input { width: 60px; text-align: right; border-bottom: 1px solid #ccc; font-size: 1.2rem; }
 .hp-current-container { display: flex; align-items: center; justify-content: center; flex: 1; margin-top: 5px; }
-.hp-current { font-size: 3.5rem; text-align: center; height: 100%; }
+.hp-current { font-size: 3.5rem; text-align: center; height: 100%; width: 80px;}
+
+/* КНОПКИ ЗДОРОВЬЯ */
+.hp-btn {
+    background: #e5e7eb; color: #374151; border: 2px solid #d4d4d4; border-radius: 8px;
+    width: 35px; height: 35px; font-size: 1.5rem; font-weight: bold; cursor: pointer;
+    display: flex; align-items: center; justify-content: center; padding: 0; margin: 0 10px; transition: 0.2s;
+}
+.hp-btn.hp-minus:hover { background: var(--danger); color: white; border-color: var(--danger); }
+.hp-btn.hp-plus:hover { background: #10b981; color: white; border-color: #10b981; }
 
 .attacks-box { height: 200px; }
 
@@ -157,7 +166,7 @@ button:hover { background-color: var(--gold-hover); transform: scale(1.05); }
     position: absolute; top: 15px; right: 15px; background: #eee; color: #333;
     width: 35px; height: 35px; border-radius: 50%; font-size: 1.2rem;
     display: flex; align-items: center; justify-content: center; cursor: pointer; border: none;
-    z-index: 10; /* Кнопка всегда сверху */
+    z-index: 10;
 }
 .modal-close:hover { background: var(--danger); color: #fff; }
 
@@ -177,15 +186,25 @@ button:hover { background-color: var(--gold-hover); transform: scale(1.05); }
 .money-box input { width: 100%; text-align: center; font-size: 0.9rem; border: none; background: transparent; padding: 0; }
 
 .traits-box { height: 90px; padding: 10px; }
-
 .game-actions { text-align: center; margin-top: 30px; padding-top: 20px; }
 
-/* ПЛАВАЮЩИЙ КУБИК */
-.dice-roller {
-    position: fixed; bottom: 25px; right: 25px; background: var(--panel-bg); padding: 15px;
-    border-radius: 12px; box-shadow: 0 8px 25px rgba(0,0,0,0.7); border: 2px solid #4b5563; text-align: center; z-index: 100; width: 170px;
+/* ПЛАВАЮЩИЙ КУБИК (Мобильный) */
+.dice-container {
+    position: fixed; bottom: 25px; right: 25px; z-index: 100;
+    display: flex; flex-direction: column; align-items: flex-end; gap: 10px;
 }
-.dice-roller h4 { margin: 0 0 10px 0; font-size: 0.9rem; color: var(--gold); text-transform: uppercase;}
+.dice-toggle {
+    width: 60px; height: 60px; border-radius: 50%; background: var(--panel-bg);
+    border: 2px solid var(--gold); font-size: 2rem; display: flex; align-items: center;
+    justify-content: center; cursor: pointer; box-shadow: 0 5px 15px rgba(0,0,0,0.5); padding: 0; margin: 0;
+}
+.dice-menu {
+    background: var(--panel-bg); padding: 15px; border-radius: 12px;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.7); border: 2px solid #4b5563; text-align: center; width: 170px;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    transform-origin: bottom right;
+}
+.dice-menu.hidden { opacity: 0; transform: scale(0.8); pointer-events: none; }
 .dice-buttons { display: flex; flex-wrap: wrap; gap: 5px; justify-content: center;}
 .dice-buttons button { margin: 0; padding: 5px 8px; font-size: 0.85rem; background: #374151; border: 1px solid #4b5563; color: #fff; }
 .dice-buttons button:hover { background: var(--gold); color: #000; }
