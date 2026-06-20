@@ -9,7 +9,7 @@
 <body>
 
 <div class="container">
-    <!-- ЭКРАН 1: Главная -->
+	<!-- ЭКРАН 1: Главная -->
     <section class="screen active" id="screen-home">
         <div class="hero">
             <h1>D&D Character Manager</h1>
@@ -19,6 +19,8 @@
                 <button id="loadGameBtn" class="btn-secondary hidden" onclick="loadGame()">Продолжить игру</button>
                 <button onclick="document.getElementById('importFileMain').click()" class="btn-export">Импорт (TXT)</button>
                 <input type="file" id="importFileMain" accept=".txt" class="hidden" onchange="importTXT(event)">
+                <!-- Новая кнопка очистки (появится, если есть сохранение) -->
+                <button id="clearSaveBtn" class="btn-danger hidden" onclick="resetGame()">Очистить</button>
             </div>
         </div>
     </section>
@@ -140,7 +142,7 @@
             </div>
         </div>
 
-        <!-- Управление сохранением -->
+		<!-- Управление сохранением (нижняя панель на листе персонажа) -->
         <div class="game-actions">
             <button onclick="addXP(10)" class="btn-xp">+10 XP</button>
             <button onclick="addXP(50)" class="btn-xp">+50 XP</button>
@@ -149,6 +151,7 @@
             <button onclick="document.getElementById('importFileSheet').click()" class="btn-secondary">Импорт (TXT)</button>
             <input type="file" id="importFileSheet" accept=".txt" class="hidden" onchange="importTXT(event)">
             <span style="border-left: 2px solid #374151; margin: 0 10px;"></span>
+            <!-- Кнопка удаления отсюда убрана, кнопка В меню растянется на всю ширину на мобилке -->
             <button onclick="nextScreen('screen-home')" class="btn-secondary">В меню</button>
         </div>
     </section>

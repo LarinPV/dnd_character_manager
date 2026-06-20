@@ -21,7 +21,6 @@ const skillToStat = {
 };
 const saveToStat = { str: 'strength', dex: 'dexterity', con: 'constitution', int: 'intelligence', wis: 'wisdom', cha: 'charisma' };
 
-// ИСПРАВЛЕНИЕ: "Гномий" язык
 const randomLanguages = ["Эльфийский", "Дварфийский", "Орочий", "Драконий", "Гоблинский", "Великаний", "Гномий", "Небесный"];
 const randomTools = ["Инструменты вора", "Набор травника", "Инструменты кузнеца", "Инструменты пивовара", "Игровые карты", "Кости"];
 
@@ -75,7 +74,12 @@ const backgroundData = {
 
 window.onload = () => {
     const saved = localStorage.getItem("dnd_char");
-    if (saved) document.getElementById("loadGameBtn").classList.remove("hidden");
+    if (saved) {
+        document.getElementById("loadGameBtn").classList.remove("hidden");
+        // Показываем кнопку очистки, если есть сохранение
+        let clearBtn = document.getElementById("clearSaveBtn");
+        if(clearBtn) clearBtn.classList.remove("hidden");
+    }
 };
 
 function nextScreen(id) {
@@ -133,20 +137,25 @@ function setBackground(bg) {
     character.skillsProf = { acr: false, ath: false, prc: false, sur: false, ani: false, inti: false, prf: false, his: false, slg: false, arc: false, med: false, dec: false, nat: false, ins: false, inv: false, rel: false, ste: false, per: false };
     
     let raceFeatures = "";
+    let raceLangs = "";
     character.speed = "30"; 
     
     if (character.race === "Человек") {
         raceFeatures = "[Раса: Человек]\n- Универсальность: вы легко адаптируетесь к любой ситуации.\n- Базовая скорость 30 футов.";
+        raceLangs = "Общий язык и еще один на выбор.";
     } else if (character.race === "Эльф") {
-        raceFeatures = "[Раса: Эльф]\n- Тёмное зрение (60 фт.)\n- Наследие фей: преимущество против очарования и иммунитет к магии сна.\n- Транс: медитация 4 часа вместо сна.";
+        raceFeatures = "[Раса: Эльф]\n- Тёмное зрение (60 фт.)\n- Острые чувства: вы владеете навыком Внимание.\n- Наследие фей: преимущество на спасброски от очарования, магия не может вас усыпить.\n- Транс: медитация 4 часа заменяет 8 часов сна.";
         character.skillsProf.prc = true;
+        raceLangs = "Общий и Эльфийский языки.";
     } else if (character.race === "Гном") {
-        raceFeatures = "[Раса: Гном]\n- Тёмное зрение (60 фт.)\n- Гномья хитрость: преимущество на спасброски Инт, Муд и Хар против магии.\n- Скорость 25 футов.";
+        raceFeatures = "[Раса: Гном]\n- Тёмное зрение (60 фт.)\n- Гномья хитрость: преимущество на спасброски Интеллекта, Мудрости и Харизмы против любой магии.\n- Базовая скорость 25 футов.";
         character.speed = "25";
+        raceLangs = "Общий и Гномий языки.";
     }
 
     let classEquip = "";
     let classFeatures = "";
+    let classProfs = "";
 
     character.hp = 0; 
     character.maxHp = 0; 
@@ -154,34 +163,37 @@ function setBackground(bg) {
     if (character.class === "Воин") {
         character.savesProf.str = true; character.savesProf.con = true;
         character.skillsProf.ath = true; character.skillsProf.inti = true;
-        classFeatures = "[Класс: Воин 1-го уровня]\n- Боевой стиль (Дуэлянт: +2 к урону одноручным)\n- Второе дыхание (1d10 + ур. ПЗ)";
+        classProfs = "[Броня и Оружие]\nВсе доспехи, щиты, простое и воинское оружие.";
+        classFeatures = "[Класс: Воин 1-го уровня]\n- Боевой стиль (Дуэлянт: +2 к урону одноручным оружием)\n- Второе дыхание (бонусным действием восстанавливает 1d10 + ур. ПЗ)";
         classEquip = "Длинный меч, Щит, Кольчужная рубаха";
         character.attacks = "Длинный меч | +0 | 1d8+0 рубящий"; 
     } else if (character.class === "Волшебник") {
         character.savesProf.int = true; character.savesProf.wis = true;
         character.skillsProf.arc = true; character.skillsProf.his = true;
-        classFeatures = "[Класс: Волшебник 1-го уровня]\n- Тайное восстановление\n\n[Магия Волшебника]\nЯчейки: 2 (1 круг)\n- Фокусы: Огненный снаряд, Волшебная рука, Свет\n- 1 круг: Волшебная стрела, Магический доспех, Щит, Усыпление";
+        classProfs = "[Броня и Оружие]\nКинжалы, дротики, пращи, боевые посохи, легкие арбалеты.";
+        classFeatures = "[Класс: Волшебник 1-го уровня]\n- Тайное восстановление (восст. ячейки на коротком отдыхе)\n\n[Магия Волшебника]\nЯчейки: 2 (1 круг)\n- Фокусы: Огненный снаряд, Волшебная рука, Свет\n- 1 круг: Волшебная стрела, Магический доспех, Щит, Усыпление";
         classEquip = "Посох, Книга заклинаний";
         character.attacks = "Огненный снаряд | +0 | 1d10 огонь\nВолшебная стрела | Авто | 3шт x 1d4+1 силовое";
     } else if (character.class === "Жрец") {
         character.savesProf.wis = true; character.savesProf.cha = true;
         character.skillsProf.rel = true; character.skillsProf.med = true;
-        classFeatures = "[Класс: Жрец 1-го уровня]\n- Домен Жизни (+доп. лечение 2+уровень)\n\n[Магия Жреца]\nЯчейки: 2 (1 круг)\n- Фокусы: Священное пламя, Чудотворство, Указание\n- 1 круг: Лечение ран, Направляющий снаряд, Щит веры, Благословение";
+        classProfs = "[Броня и Оружие]\nЛегкие и средние доспехи (Домен Жизни: Тяжелые доспехи), щиты, простое оружие.";
+        classFeatures = "[Класс: Жрец 1-го уровня]\n- Домен Жизни: Ученик жизни (ваши заклинания лечения восстанавливают дополнительно 2 + круг заклинания ПЗ)\n\n[Магия Жреца]\nЯчейки: 2 (1 круг)\n- Фокусы: Священное пламя, Чудотворство, Указание\n- 1 круг: Лечение ран, Направляющий снаряд, Щит веры, Благословение";
         classEquip = "Булава, Кольчужная рубаха, Щит, Священный символ";
         character.attacks = "Булава | +0 | 1d6+0 дробящий\nСвященное пламя | Спас Лов | 1d8 излучение";
     } else if (character.class === "Бард") {
         character.savesProf.dex = true; character.savesProf.cha = true;
         character.skillsProf.acr = true; character.skillsProf.per = true; character.skillsProf.prf = true;
+        classProfs = "[Броня и Оружие]\nЛегкие доспехи, простое оружие, ручные арбалеты, длинные мечи, рапиры, короткие мечи. Три музыкальных инструмента.";
         classFeatures = "[Класс: Бард 1-го уровня]\n- Вдохновение барда (d6)\n\n[Магия Барда]\nЯчейки: 2 (1 круг)\n- Фокусы: Злая насмешка, Малая иллюзия\n- 1 круг: Лечение ран, Шёпот незримого, Очарование личности, Героизм";
         classEquip = "Рапира, Кожаная броня, Лютня, Набор путешественника";
         character.attacks = "Рапира | +0 | 1d8+0 колющий\nЗлая насмешка | Спас Муд | 1d4 психический";
     }
 
     const bgObj = backgroundData[bg];
-    
     character.money = bgObj.money;
     character.equipment = `${classEquip}\n\n[Инвентарь предыстории]\n${bgObj.equip}`;
-    character.proficiencies = bgObj.profs();
+    character.proficiencies = `${classProfs}\n\n[Языки расы]\n${raceLangs}\n\n[От предыстории (${bg})]\n${bgObj.profs()}`;
     character.features = `${raceFeatures}\n\n${classFeatures}\n\n[Предыстория: ${bg}]\n${bgObj.feature}`;
     
     character.traits = getRandom(randomTraitsList);
@@ -192,6 +204,12 @@ function setBackground(bg) {
     updateCalculations();
     character.hp = character.maxHp; 
     
+    // Активация кнопок меню при успешном создании сохранения
+    let loadBtn = document.getElementById("loadGameBtn");
+    let clearBtn = document.getElementById("clearSaveBtn");
+    if(loadBtn) loadBtn.classList.remove("hidden");
+    if(clearBtn) clearBtn.classList.remove("hidden");
+
     saveGame(); renderSheet(); nextScreen('screen-sheet');
 }
 
@@ -478,6 +496,33 @@ function rollDice(sides) {
 
 function saveGame() { localStorage.setItem("dnd_char", JSON.stringify(character)); }
 
+// МЯГКАЯ ОЧИСТКА СОХРАНЕНИЙ
+function resetGame() {
+    if(confirm("Вы уверены, что хотите удалить текущего персонажа? Убедитесь, что сделали экспорт (TXT)!")) {
+        localStorage.removeItem("dnd_char");
+        
+        let loadBtn = document.getElementById("loadGameBtn");
+        let clearBtn = document.getElementById("clearSaveBtn");
+        if(loadBtn) loadBtn.classList.add("hidden");
+        if(clearBtn) clearBtn.classList.add("hidden");
+        
+        character = {
+            name: "", race: "", class: "", background: "",
+            level: 1, xp: 0, hp: 0, maxHp: 0,
+            ac: "", initiative: "+0", speed: "30",
+            proficiencyBonus: 2, inspiration: "", passivePerception: 10,
+            stats: { strength: 10, dexterity: 10, constitution: 10, intelligence: 10, wisdom: 10, charisma: 10 },
+            savesProf: { str: false, dex: false, con: false, int: false, wis: false, cha: false },
+            skillsProf: { acr: false, ath: false, prc: false, sur: false, ani: false, inti: false, prf: false, his: false, slg: false, arc: false, med: false, dec: false, nat: false, ins: false, inv: false, rel: false, ste: false, per: false },
+            money: { cp: "", sp: "", ep: "", gp: "", pp: "" },
+            equipment: "", attacks: "", features: "", proficiencies: "",
+            traits: "", ideals: "", bonds: "", flaws: ""
+        };
+        
+        alert("Персонаж успешно удален.");
+    }
+}
+
 function exportTXT() {
     const blob = new Blob([JSON.stringify(character, null, 2)], { type: "text/plain" });
     const url = URL.createObjectURL(blob);
@@ -494,6 +539,12 @@ function importTXT(event) {
             const importedData = JSON.parse(e.target.result);
             if (importedData && importedData.stats) {
                 character = { ...character, ...importedData };
+                
+                let loadBtn = document.getElementById("loadGameBtn");
+                let clearBtn = document.getElementById("clearSaveBtn");
+                if(loadBtn) loadBtn.classList.remove("hidden");
+                if(clearBtn) clearBtn.classList.remove("hidden");
+
                 saveGame(); renderSheet(); nextScreen('screen-sheet');
             } else alert("Неверный формат данных!");
         } catch (err) { alert("Ошибка чтения файла!"); }
