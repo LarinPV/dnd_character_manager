@@ -129,7 +129,6 @@ button:hover { background-color: var(--gold-hover); transform: scale(1.05); }
 .hp-current-container { display: flex; align-items: center; justify-content: center; flex: 1; margin-top: 5px; }
 .hp-current { font-size: 3.5rem; text-align: center; height: 100%; width: 80px;}
 
-/* КНОПКИ ЗДОРОВЬЯ */
 .hp-btn {
     background: #e5e7eb; color: #374151; border: 2px solid #d4d4d4; border-radius: 8px;
     width: 35px; height: 35px; font-size: 1.5rem; font-weight: bold; cursor: pointer;
@@ -161,7 +160,6 @@ button:hover { background-color: var(--gold-hover); transform: scale(1.05); }
 .modal-title { margin-top: 0; color: #333; border-bottom: 2px solid #ccc; padding-bottom: 10px; margin-bottom: 20px;}
 .modal-footer { margin-top: 20px; text-align: center; }
 
-/* Крестик закрытия */
 .modal-close {
     position: absolute; top: 15px; right: 15px; background: #eee; color: #333;
     width: 35px; height: 35px; border-radius: 50%; font-size: 1.2rem;
@@ -170,7 +168,6 @@ button:hover { background-color: var(--gold-hover); transform: scale(1.05); }
 }
 .modal-close:hover { background: var(--danger); color: #fff; }
 
-/* НАВЫКИ И ИСПЫТАНИЯ ВНУТРИ МОДАЛКИ */
 .list-box { padding: 15px 10px; }
 .skills-box { padding-bottom: 25px; }
 .list-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
@@ -178,7 +175,6 @@ button:hover { background-color: var(--gold-hover); transform: scale(1.05); }
 .list-row input[type="text"] { width: 35px; text-align: center; border-bottom: 1px solid #ccc; font-size: 1.1rem; padding: 0; background: transparent !important; color: #000; }
 .list-row label { font-size: 0.9rem; color: #222; }
 
-/* ДЕНЬГИ В МОДАЛКЕ */
 .equipment-container { display: flex; gap: 15px; height: 100%; }
 .money-col { display: flex; flex-direction: column; gap: 8px; width: 45px; }
 .money-box { border: 2px solid #ccc; border-radius: 8px 8px 50% 50%; padding: 5px; text-align: center; background: #f9f9f9; }
@@ -214,120 +210,57 @@ button:hover { background-color: var(--gold-hover); transform: scale(1.05); }
    АДАПТАЦИЯ ДЛЯ МОБИЛЬНЫХ ТЕЛЕФОНОВ
    ========================================= */
 @media (max-width: 768px) {
-    .container {
-        padding: 10px;
-    }
-    
-    .dnd-sheet {
-        padding: 20px 15px; /* Уменьшаем огромные внутренние отступы листа */
-    }
+    .container { padding: 10px; }
+    .dnd-sheet { padding: 20px 15px; }
 
-    /* Шапка складывается в колонку */
-    .sheet-header {
-        flex-direction: column;
-        align-items: stretch;
-        gap: 15px;
-    }
-    .char-info-grid {
-        grid-template-columns: repeat(2, 1fr); /* 2 столбца вместо 3 */
-    }
+    .sheet-header { flex-direction: column; align-items: stretch; gap: 15px; }
+    .char-info-grid { grid-template-columns: repeat(2, 1fr); }
 
-    /* Перестройка основных блоков (статы сверху, здоровье снизу) */
-    .compact-body {
-        flex-direction: column;
-    }
+    .compact-body { flex-direction: column; }
     .col-stats {
-        width: 100%;
-        display: grid;
-        grid-template-columns: repeat(3, 1fr); /* Статы становятся сеткой 3x2 */
-        gap: 15px 10px;
+        width: 100%; display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px 10px;
     }
-    .col-center {
-        max-width: 100%;
-        width: 100%;
-    }
+    .col-center { max-width: 100%; width: 100%; }
 
-    /* Боевые характеристики (КД, Инициатива, Скорость) */
-    .combat-row {
-        height: auto;
-        min-height: 85px;
-    }
+    .combat-row { height: auto; min-height: 85px; }
     .shield-box input { font-size: 1.5rem; }
     .init-box input, .speed-box input { font-size: 1.5rem; }
-    
-    .hp-current {
-        font-size: 2.5rem;
-        width: 60px;
-    }
+    .hp-current { font-size: 2.5rem; width: 60px; }
 
-    /* Исправление съезжающего текста на рамках (Атаки и Заклинания) */
     .bottom-label {
-        font-size: 0.65rem;
-        white-space: normal; /* Разрешаем перенос текста */
-        width: max-content;
-        max-width: 90%;
-        text-align: center;
-        line-height: 1.1;
-        bottom: -15px;
+        font-size: 0.65rem; white-space: normal; width: max-content; max-width: 90%;
+        text-align: center; line-height: 1.1; bottom: -15px;
     }
-    .framed-box {
-        margin-bottom: 15px; /* Даем место для перенесенного текста лейбла */
-    }
+    .framed-box { margin-bottom: 15px; }
+    .panel-buttons { grid-template-columns: 1fr; gap: 10px; }
 
-    /* Кнопки меню складываются друг под друга */
-    .panel-buttons {
-        grid-template-columns: 1fr;
-        gap: 10px;
-    }
+    .game-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .game-actions button { width: 100%; margin: 0; font-size: 0.9rem; }
+    .game-actions span { display: none; }
+    .game-actions button:last-child { grid-column: span 2; }
 
-    /* Перестройка нижних кнопок управления в компактную сетку 2x2 */
-    .game-actions {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 10px;
-    }
-    .game-actions button {
-        width: 100%;
-        margin: 0;
-        font-size: 0.9rem;
-    }
-    .game-actions span {
-        display: none; /* Прячем разделители */
-    }
-    /* Кнопка "В меню" растягивается на всю ширину внизу */
-    .game-actions button:last-child {
-        grid-column: span 2;
-    }
-
-    /* АДАПТАЦИЯ ВСПЛЫВАЮЩИХ ОКОН */
+    /* МОДАЛЬНЫЕ ОКНА НА ТЕЛЕФОНЕ */
     .modal-content {
         padding: 20px 15px;
+        height: auto !important; /* Убираем жесткую высоту */
     }
-    /* Перехват инлайн-стилей, которые ломали отображение на мобильном */
+    
     .modal-content > div[style*="display:flex"],
     .modal-content > div[style*="display: flex"] {
-        flex-direction: column !important;
-        gap: 15px !important;
+        flex-direction: column !important; gap: 15px !important;
     }
-    /* Разворот сетки навыков в одну колонку */
     .skills-box > div[style*="display:grid"],
     .skills-box > div[style*="display: grid"],
     .personality-container {
         grid-template-columns: 1fr !important;
     }
-    /* Расположение монет горизонтально над инвентарем */
-    .equipment-container {
-        flex-direction: column;
-    }
-    .money-col {
-        flex-direction: row;
-        width: 100%;
-        justify-content: space-between;
-        margin-bottom: 10px;
-    }
-    .money-box {
-        flex: 1;
-        border-radius: 8px;
-        margin: 0 2px;
+    .equipment-container { flex-direction: column; }
+    .money-col { flex-direction: row; width: 100%; justify-content: space-between; margin-bottom: 10px; }
+    .money-box { flex: 1; border-radius: 8px; margin: 0 2px; }
+
+    /* ИСПРАВЛЕНИЕ СПЛЮСНУТЫХ ЯЧЕЕК ОСОБЕННОСТЕЙ И СНАРЯЖЕНИЯ */
+    .features-box, .equipment-box {
+        min-height: 300px !important;
+        flex-shrink: 0; /* Запрещаем браузеру сжимать эти ячейки */
     }
 }

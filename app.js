@@ -21,7 +21,8 @@ const skillToStat = {
 };
 const saveToStat = { str: 'strength', dex: 'dexterity', con: 'constitution', int: 'intelligence', wis: 'wisdom', cha: 'charisma' };
 
-const randomLanguages = ["Эльфийский", "Дварфийский", "Орочий", "Драконий", "Гоблинский", "Великаний", "Гномьей", "Небесный"];
+// ИСПРАВЛЕНИЕ: "Гномий" язык
+const randomLanguages = ["Эльфийский", "Дварфийский", "Орочий", "Драконий", "Гоблинский", "Великаний", "Гномий", "Небесный"];
 const randomTools = ["Инструменты вора", "Набор травника", "Инструменты кузнеца", "Инструменты пивовара", "Игровые карты", "Кости"];
 
 const randomTraitsList = [
@@ -77,7 +78,6 @@ window.onload = () => {
     if (saved) document.getElementById("loadGameBtn").classList.remove("hidden");
 };
 
-// --- НАВИГАЦИЯ И ОКНА ---
 function nextScreen(id) {
     document.querySelector('.screen.active').classList.remove('active');
     document.getElementById(id).classList.add('active');
@@ -97,7 +97,6 @@ function loadGame() {
     nextScreen('screen-sheet');
 }
 
-// --- СОЗДАНИЕ ПЕРСОНАЖА ---
 function setName() {
     const input = document.getElementById("characterName").value.trim();
     if (!input) return alert("Пожалуйста, введите имя!");
@@ -149,7 +148,6 @@ function setBackground(bg) {
     let classEquip = "";
     let classFeatures = "";
 
-    // Сброс здоровья, чтобы логика updateCalculations выдала полные хиты новому герою
     character.hp = 0; 
     character.maxHp = 0; 
 
@@ -191,12 +189,12 @@ function setBackground(bg) {
     character.bonds = getRandom(randomBondsList);
     character.flaws = getRandom(randomFlawsList);
 
-    // Рассчитываем статы (выдает правильный ХП и атаки)
     updateCalculations();
+    character.hp = character.maxHp; 
+    
     saveGame(); renderSheet(); nextScreen('screen-sheet');
 }
 
-// --- ЛОГИКА ИНТЕРАКТИВНОГО ЛИСТА И ПРОКАЧКИ УРОВНЕЙ ---
 function addXP(amount) {
     character.xp = (character.xp || 0) + amount;
     document.getElementById("sheet-xp").value = character.xp;
@@ -207,7 +205,6 @@ function checkLevelUp() {
     let leveledUp = false;
     let oldLevel = character.level;
     
-    // Официальные пороги (300 и 900)
     if (character.xp >= 900 && character.level < 3) character.level = 3;
     else if (character.xp >= 300 && character.level < 2) character.level = 2;
 
@@ -270,7 +267,6 @@ function checkLevelUp() {
     }
 }
 
-// НОВАЯ ФУНКЦИЯ ДЛЯ КНОПОК ПЛЮС И МИНУС
 function changeHP(amount) {
     let current = Number(character.hp) || 0;
     let max = Number(character.maxHp) || 0;
@@ -278,7 +274,7 @@ function changeHP(amount) {
     current += amount;
     
     if (current < 0) current = 0;
-    if (current > max) current = max; // Ограничиваем хиты максимумом
+    if (current > max) current = max; 
     
     character.hp = current;
     document.getElementById('sheet-hp').value = character.hp;
@@ -291,7 +287,6 @@ function updateCalculations() {
     let pb = Math.floor((character.level - 1) / 4) + 2;
     document.getElementById('sheet-prof').value = "+" + pb;
 
-    // --- ДИНАМИЧЕСКИЙ РАСЧЕТ ЗДОРОВЬЯ ---
     let conMod = calculateModifierRaw(character.stats['constitution'] || 10);
     let hpBase = 0, hpPerLevel = 0;
     
@@ -308,7 +303,6 @@ function updateCalculations() {
         let hpInput = document.getElementById('sheet-maxhp');
         if(hpInput) hpInput.value = character.maxHp;
         
-        // Лечим фулл, если это только что созданный перс. Иначе добавляем разницу ХП при левелапе/увеличении Телосложения
         if (character.hp === 0) {
             character.hp = character.maxHp;
         } else if (hpChanged && diff > 0 && character.level > 1) {
@@ -319,30 +313,27 @@ function updateCalculations() {
         if(document.getElementById('sheet-hp')) document.getElementById('sheet-hp').value = character.hp;
     }
 
-    // --- ДИНАМИЧЕСКИЙ КЛАСС БРОНИ ---
     let dexMod = calculateModifierRaw(character.stats['dexterity'] || 10);
     if (character.class === "Волшебник") {
         character.ac = 10 + dexMod;
     } else if (character.class === "Бард") {
-        character.ac = 11 + dexMod; // Кожаная броня
+        character.ac = 11 + dexMod; 
     } else if (character.class === "Жрец") {
-        character.ac = 15 + Math.min(2, dexMod); // Кольчужная рубаха(13) + Щит(2) + Ловк(макс 2)
+        character.ac = 15 + Math.min(2, dexMod); 
     } else if (character.class === "Воин") {
-        character.ac = 16; // Тяжелая броня - ловкость не добавляется
+        character.ac = 16; 
     }
     document.getElementById('sheet-ac').value = character.ac;
 
-    // --- АВТОРАСЧЕТ ИНИЦИАТИВЫ ---
     character.initiative = dexMod > 0 ? `+${dexMod}` : `${dexMod}`;
     document.getElementById('sheet-init').value = character.initiative;
 
-    // --- УМНЫЙ АВТОРАСЧЕТ АТАК ---
     if (character.attacks) {
         let strMod = calculateModifierRaw(character.stats['strength'] || 10);
         let intMod = calculateModifierRaw(character.stats['intelligence'] || 10);
         let wisMod = calculateModifierRaw(character.stats['wisdom'] || 10);
         let chaMod = calculateModifierRaw(character.stats['charisma'] || 10);
-        let finMod = Math.max(strMod, dexMod); // Для фехтовального оружия (Рапира)
+        let finMod = Math.max(strMod, dexMod); 
         
         let text = character.attacks;
         
@@ -380,7 +371,6 @@ function updateCalculations() {
         }
     }
 
-    // --- АВТОРАСЧЕТ СПАСБРОСКОВ И НАВЫКОВ ---
     for (let sv in saveToStat) {
         let statName = saveToStat[sv];
         let score = character.stats[statName] || 10;
@@ -478,7 +468,6 @@ function updateStat(statName, value) {
     saveGame(); updateCalculations(); 
 }
 
-// --- БРОСОК КУБИКА ---
 function rollDice(sides) {
     const result = Math.floor(Math.random() * sides) + 1;
     const resultDiv = document.getElementById("dice-result");
@@ -487,7 +476,6 @@ function rollDice(sides) {
     setTimeout(() => { resultDiv.style.transform = "scale(1)"; resultDiv.style.color = "white"; }, 200);
 }
 
-// --- СОХРАНЕНИЕ / ИМПОРТ / ЭКСПОРТ ---
 function saveGame() { localStorage.setItem("dnd_char", JSON.stringify(character)); }
 
 function exportTXT() {
