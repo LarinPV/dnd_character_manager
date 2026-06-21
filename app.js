@@ -41,9 +41,7 @@ const randomFlawsList = [
     "Я панически боюсь замкнутых пространств.", "Я никогда не признаю своих ошибок.", "Я слишком доверяю красивым людям."
 ];
 
-function getRandom(arr, count = 1) {
-    return [...arr].sort(() => 0.5 - Math.random()).slice(0, count).join(", ");
-}
+function getRandom(arr, count = 1) { return [...arr].sort(() => 0.5 - Math.random()).slice(0, count).join(", "); }
 
 const backgroundData = {
     "Солдат": {
@@ -76,7 +74,6 @@ window.onload = () => {
     const saved = localStorage.getItem("dnd_char");
     if (saved) {
         document.getElementById("loadGameBtn").classList.remove("hidden");
-        // Показываем кнопку очистки, если есть сохранение
         let clearBtn = document.getElementById("clearSaveBtn");
         if(clearBtn) clearBtn.classList.remove("hidden");
     }
@@ -108,16 +105,42 @@ function setName() {
 }
 
 function setRace(race) { character.race = race; nextScreen('screen-class'); }
-function setClass(cls) { character.class = cls; generateStats(); nextScreen('screen-stats'); }
+
+function setClass(cls) { 
+    character.class = cls; 
+    generateStats(true); // Запускаем со стандартным массивом по умолчанию
+    nextScreen('screen-stats'); 
+}
 
 function rollStat() {
     let rolls = Array.from({length: 4}, () => Math.floor(Math.random() * 6) + 1);
     rolls.sort((a, b) => a - b); return rolls[1] + rolls[2] + rolls[3];
 }
 
-function generateStats() {
-    character.stats = { strength: rollStat(), dexterity: rollStat(), constitution: rollStat(), intelligence: rollStat(), wisdom: rollStat(), charisma: rollStat() };
+// === НОВАЯ ЛОГИКА ГЕНЕРАЦИИ ХАРАКТЕРИСТИК (СТАНДАРТНЫЙ НАБОР) ===
+function generateStats(isStandard = true) {
+    if (isStandard) {
+        // Оптимальное распределение Стандартного Набора (15, 14, 13, 12, 10, 8) по классам
+        if (character.class === "Воин") {
+            character.stats = { strength: 15, dexterity: 13, constitution: 14, intelligence: 10, wisdom: 12, charisma: 8 };
+        } else if (character.class === "Волшебник") {
+            character.stats = { strength: 8, dexterity: 14, constitution: 13, intelligence: 15, wisdom: 12, charisma: 10 };
+        } else if (character.class === "Жрец") {
+            character.stats = { strength: 14, dexterity: 8, constitution: 13, intelligence: 10, wisdom: 15, charisma: 12 };
+        } else if (character.class === "Бард") {
+            character.stats = { strength: 8, dexterity: 14, constitution: 13, intelligence: 10, wisdom: 12, charisma: 15 };
+        } else {
+            character.stats = { strength: 15, dexterity: 14, constitution: 13, intelligence: 12, wisdom: 10, charisma: 8 };
+        }
+    } else {
+        // Рандомные броски 4d6
+        character.stats = { 
+            strength: rollStat(), dexterity: rollStat(), constitution: rollStat(), 
+            intelligence: rollStat(), wisdom: rollStat(), charisma: rollStat() 
+        };
+    }
     
+    // Расовые бонусы применяются поверх базовых цифр
     if (character.race === "Человек") {
         for (let key in character.stats) character.stats[key] += 1;
     } else if (character.race === "Эльф") {
@@ -204,7 +227,6 @@ function setBackground(bg) {
     updateCalculations();
     character.hp = character.maxHp; 
     
-    // Активация кнопок меню при успешном создании сохранения
     let loadBtn = document.getElementById("loadGameBtn");
     let clearBtn = document.getElementById("clearSaveBtn");
     if(loadBtn) loadBtn.classList.remove("hidden");
@@ -496,7 +518,6 @@ function rollDice(sides) {
 
 function saveGame() { localStorage.setItem("dnd_char", JSON.stringify(character)); }
 
-// МЯГКАЯ ОЧИСТКА СОХРАНЕНИЙ
 function resetGame() {
     if(confirm("Вы уверены, что хотите удалить текущего персонажа? Убедитесь, что сделали экспорт (TXT)!")) {
         localStorage.removeItem("dnd_char");

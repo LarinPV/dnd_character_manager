@@ -9,7 +9,6 @@
 <body>
 
 <div class="container">
-	<!-- ЭКРАН 1: Главная -->
     <section class="screen active" id="screen-home">
         <div class="hero">
             <h1>D&D Character Manager</h1>
@@ -19,13 +18,11 @@
                 <button id="loadGameBtn" class="btn-secondary hidden" onclick="loadGame()">Продолжить игру</button>
                 <button onclick="document.getElementById('importFileMain').click()" class="btn-export">Импорт (TXT)</button>
                 <input type="file" id="importFileMain" accept=".txt" class="hidden" onchange="importTXT(event)">
-                <!-- Новая кнопка очистки (появится, если есть сохранение) -->
                 <button id="clearSaveBtn" class="btn-danger hidden" onclick="resetGame()">Очистить</button>
             </div>
         </div>
     </section>
 
-    <!-- ЭКРАН 2: Имя -->
     <section class="screen" id="screen-name">
         <h1>Создание персонажа</h1>
         <h2>Как зовут вашего героя?</h2>
@@ -33,7 +30,6 @@
         <button onclick="setName()">Далее</button>
     </section>
 
-    <!-- ЭКРАН 3: Раса -->
     <section class="screen" id="screen-race">
         <h2>Выберите расу</h2>
         <div class="cards">
@@ -43,7 +39,6 @@
         </div>
     </section>
 
-    <!-- ЭКРАН 4: Класс -->
     <section class="screen" id="screen-class">
         <h2>Выберите класс</h2>
         <div class="cards">
@@ -54,17 +49,20 @@
         </div>
     </section>
 
-    <!-- ЭКРАН 5: Характеристики -->
     <section class="screen" id="screen-stats">
         <h2>Характеристики</h2>
+        <p style="text-align: center; font-size: 0.95rem; color: #9ca3af; margin-bottom: 20px;">
+            Распределен Стандартный набор (15, 14, 13, 12, 10, 8) + Бонусы Расы.
+        </p>
         <div id="stats-grid" class="stats-grid"></div>
         <div class="actions">
-            <button onclick="generateStats()" class="btn-secondary">Перебросить</button>
+            <button onclick="generateStats(false)" class="btn-secondary">Бросить кубики</button>
+            <button onclick="generateStats(true)" class="btn-secondary">Стандартный набор</button>
+            <br><br>
             <button onclick="nextScreen('screen-background')">Далее</button>
         </div>
     </section>
 
-    <!-- ЭКРАН 6: Предыстория -->
     <section class="screen" id="screen-background">
         <h2>Выберите предысторию</h2>
         <div class="cards">
@@ -75,10 +73,8 @@
         </div>
     </section>
 
-    <!-- ЭКРАН 7: Интерактивный лист персонажа -->
     <section class="screen" id="screen-sheet">
         <div class="dnd-sheet main-sheet">
-            <!-- ШАПКА -->
             <div class="sheet-header">
                 <div class="char-name-box">
                     <input type="text" id="sheet-name" oninput="updateChar('name', this.value)" placeholder="Имя героя">
@@ -94,10 +90,7 @@
                 </div>
             </div>
 
-            <!-- ТЕЛО ЛИСТА (Компактное) -->
             <div class="sheet-body compact-body">
-                
-                <!-- 1. КОЛОНКА СТАТОВ -->
                 <div class="col-stats">
                     <div class="stat-box"><label>СИЛА</label><input type="text" id="sheet-str-mod" class="stat-mod" readonly><div class="stat-score-bubble"><input type="number" id="sheet-str" oninput="updateStat('strength', this.value)"></div></div>
                     <div class="stat-box"><label>ЛОВКОСТЬ</label><input type="text" id="sheet-dex-mod" class="stat-mod" readonly><div class="stat-score-bubble"><input type="number" id="sheet-dex" oninput="updateStat('dexterity', this.value)"></div></div>
@@ -107,7 +100,6 @@
                     <div class="stat-box"><label>ХАРИЗМА</label><input type="text" id="sheet-cha-mod" class="stat-mod" readonly><div class="stat-score-bubble"><input type="number" id="sheet-cha" oninput="updateStat('charisma', this.value)"></div></div>
                 </div>
 
-                <!-- 2. БОЕВОЙ БЛОК (Центр) -->
                 <div class="col-center">
                     <div class="combat-row">
                         <div class="shield-box"><input type="text" id="sheet-ac" oninput="updateChar('ac', this.value)"><label>КД</label></div>
@@ -115,7 +107,6 @@
                         <div class="framed-box speed-box"><input type="text" id="sheet-speed" oninput="updateChar('speed', this.value)"><label class="bottom-label">СКОРОСТЬ</label></div>
                     </div>
 
-                    <!-- ОБНОВЛЕННЫЙ БЛОК ЗДОРОВЬЯ -->
                     <div class="hp-box framed-box">
                         <div class="hp-max-row"><span class="muted-text">Максимум ПЗ</span><input type="number" id="sheet-maxhp" oninput="updateChar('maxHp', this.value)"></div>
                         <div class="hp-current-container">
@@ -133,7 +124,6 @@
                 </div>
             </div>
 
-            <!-- ПАНЕЛЬ КНОПОК ДЛЯ ОТКРЫТИЯ ВКЛАДОК -->
             <div class="panel-buttons">
                 <button class="btn-panel" onclick="openModal('modal-skills')">⚔️ Навыки и Испытания</button>
                 <button class="btn-panel" onclick="openModal('modal-prof')">📜 Прочие владения и языки</button>
@@ -142,21 +132,18 @@
             </div>
         </div>
 
-		<!-- Управление сохранением (нижняя панель на листе персонажа) -->
         <div class="game-actions">
             <button onclick="addXP(10)" class="btn-xp">+10 XP</button>
             <button onclick="addXP(50)" class="btn-xp">+50 XP</button>
             <span style="border-left: 2px solid #374151; margin: 0 10px;"></span>
-            <button onclick="exportTXT()" class="btn-export">Экспорт (TXT)</button>
-            <button onclick="document.getElementById('importFileSheet').click()" class="btn-secondary">Импорт (TXT)</button>
+            <button onclick="exportTXT()" class="btn-export">Экспорт</button>
+            <button onclick="document.getElementById('importFileSheet').click()" class="btn-secondary">Импорт</button>
             <input type="file" id="importFileSheet" accept=".txt" class="hidden" onchange="importTXT(event)">
             <span style="border-left: 2px solid #374151; margin: 0 10px;"></span>
-            <!-- Кнопка удаления отсюда убрана, кнопка В меню растянется на всю ширину на мобилке -->
             <button onclick="nextScreen('screen-home')" class="btn-secondary">В меню</button>
         </div>
     </section>
     
-    <!-- ПЛАВАЮЩИЙ КУБИК (Мобильный) -->
     <div id="dice-container" class="dice-container hidden">
         <div id="dice-menu" class="dice-menu hidden">
             <h4 style="margin-top:0; margin-bottom:10px; color:var(--gold);">Бросок</h4>
@@ -172,7 +159,6 @@
 </div>
 
 <!-- ================= МОДАЛЬНЫЕ ОКНА (ВКЛАДКИ) ================= -->
-
 <div id="modal-skills" class="modal-backdrop hidden" onclick="closeOnBackdrop(event, 'modal-skills')">
     <div class="modal-content dnd-sheet flex-col">
         <button class="modal-close" onclick="closeModal('modal-skills')">✖</button>
