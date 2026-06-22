@@ -48,7 +48,6 @@ button:hover { background-color: var(--gold-hover); transform: scale(1.05); }
 .stat-row { display: flex; justify-content: space-between; background: #374151; padding: 10px 15px; border-radius: 8px;}
 .actions { text-align: center; margin-top: 20px; }
 
-
 /* =========================================
    ИНТЕРАКТИВНЫЙ ЛИСТ D&D (Главный)
    ========================================= */
@@ -160,6 +159,7 @@ button:hover { background-color: var(--gold-hover); transform: scale(1.05); }
 .modal-title { margin-top: 0; color: #333; border-bottom: 2px solid #ccc; padding-bottom: 10px; margin-bottom: 20px;}
 .modal-footer { margin-top: 20px; text-align: center; }
 
+/* Крестик закрытия */
 .modal-close {
     position: absolute; top: 15px; right: 15px; background: #eee; color: #333;
     width: 35px; height: 35px; border-radius: 50%; font-size: 1.2rem;
@@ -242,7 +242,7 @@ button:hover { background-color: var(--gold-hover); transform: scale(1.05); }
     /* МОДАЛЬНЫЕ ОКНА НА ТЕЛЕФОНЕ */
     .modal-content {
         padding: 20px 15px;
-        height: auto !important; /* Убираем жесткую высоту */
+        height: auto !important; 
     }
     
     .modal-content > div[style*="display:flex"],
@@ -258,9 +258,9 @@ button:hover { background-color: var(--gold-hover); transform: scale(1.05); }
     .money-col { flex-direction: row; width: 100%; justify-content: space-between; margin-bottom: 10px; }
     .money-box { flex: 1; border-radius: 8px; margin: 0 2px; }
 
-    /* ИСПРАВЛЕНИЕ СПЛЮСНУТЫХ ЯЧЕЕК ОСОБЕННОСТЕЙ И СНАРЯЖЕНИЯ */
-    .features-box, .equipment-box {
-        min-height: 300px !important;
-        flex-shrink: 0; /* Запрещаем браузеру сжимать эти ячейки */
+    /* ИСПРАВЛЕНИЕ СПЛЮСНУТЫХ ЯЧЕЕК ОСОБЕННОСТЕЙ, СНАРЯЖЕНИЯ И ВЛАДЕНИЙ */
+    .features-box, .equipment-box, #modal-prof .framed-box {
+        min-height: 400px !important; /* Увеличенная высота для удобства печати на телефоне */
+        flex-shrink: 0; 
     }
 }

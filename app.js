@@ -108,7 +108,7 @@ function setRace(race) { character.race = race; nextScreen('screen-class'); }
 
 function setClass(cls) { 
     character.class = cls; 
-    generateStats(true); // Запускаем со стандартным массивом по умолчанию
+    generateStats(true); 
     nextScreen('screen-stats'); 
 }
 
@@ -117,10 +117,8 @@ function rollStat() {
     rolls.sort((a, b) => a - b); return rolls[1] + rolls[2] + rolls[3];
 }
 
-// === НОВАЯ ЛОГИКА ГЕНЕРАЦИИ ХАРАКТЕРИСТИК (СТАНДАРТНЫЙ НАБОР) ===
 function generateStats(isStandard = true) {
     if (isStandard) {
-        // Оптимальное распределение Стандартного Набора (15, 14, 13, 12, 10, 8) по классам
         if (character.class === "Воин") {
             character.stats = { strength: 15, dexterity: 13, constitution: 14, intelligence: 10, wisdom: 12, charisma: 8 };
         } else if (character.class === "Волшебник") {
@@ -133,14 +131,12 @@ function generateStats(isStandard = true) {
             character.stats = { strength: 15, dexterity: 14, constitution: 13, intelligence: 12, wisdom: 10, charisma: 8 };
         }
     } else {
-        // Рандомные броски 4d6
         character.stats = { 
             strength: rollStat(), dexterity: rollStat(), constitution: rollStat(), 
             intelligence: rollStat(), wisdom: rollStat(), charisma: rollStat() 
         };
     }
     
-    // Расовые бонусы применяются поверх базовых цифр
     if (character.race === "Человек") {
         for (let key in character.stats) character.stats[key] += 1;
     } else if (character.race === "Эльф") {
@@ -544,11 +540,30 @@ function resetGame() {
     }
 }
 
+// === НОВАЯ ФУНКЦИЯ ЭКСПОРТА С ФОРМАТИРОВАНИЕМ ДАТЫ ===
 function exportTXT() {
     const blob = new Blob([JSON.stringify(character, null, 2)], { type: "text/plain" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
-    a.href = url; a.download = `${character.name || "Герой"}_DnD.txt`; a.click(); URL.revokeObjectURL(url);
+    a.href = url; 
+    
+    // Получаем текущую дату и время
+    const now = new Date();
+    const d = String(now.getDate()).padStart(2, '0');
+    const m = String(now.getMonth() + 1).padStart(2, '0');
+    const y = now.getFullYear();
+    const h = String(now.getHours()).padStart(2, '0');
+    const min = String(now.getMinutes()).padStart(2, '0');
+    
+    // Безопасное имя персонажа (убираем спецсимволы)
+    const safeName = (character.name || "Безымянный").replace(/[\\/:*?"<>|]/g, "");
+    const lvl = character.level || 1;
+    
+    // Формируем: Имя_Ур1_22.06.2026_16-30.txt
+    a.download = `${safeName}_Ур${lvl}_${d}.${m}.${y}_${h}-${min}.txt`; 
+    
+    a.click(); 
+    URL.revokeObjectURL(url);
 }
 
 function importTXT(event) {
