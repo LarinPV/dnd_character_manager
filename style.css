@@ -37,12 +37,38 @@ button:hover { background-color: var(--gold-hover); transform: scale(1.05); }
 .btn-xp { background-color: #8b5cf6; color: white; }
 .btn-xp:hover { background-color: #7c3aed; }
 
+/* 3 XP buttons container */
+.xp-btn-container {
+    display: flex; flex-direction: row; flex-wrap: nowrap; gap: 10px; 
+    justify-content: center; width: 100%; margin-bottom: 15px;
+}
+.btn-xp { flex: 1; min-width: 0; padding: 12px 5px; font-size: 0.95rem; white-space: nowrap; margin: 0; }
+
 .cards { display: flex; gap: 20px; justify-content: center; flex-wrap: wrap; margin-top: 30px; }
 .card {
     width: 260px; background: var(--panel-bg); padding: 25px; border-radius: 12px;
     cursor: pointer; border: 2px solid transparent; transition: 0.3s; text-align: center; box-sizing: border-box;
 }
 .card:hover { border-color: var(--gold); transform: translateY(-5px); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.5); }
+
+/* Helper classes replacing inline styles */
+.bg-cards-flex { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; }
+.bg-card { width: 200px; }
+.personality-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px; }
+.modal-content-flex { display: flex; gap: 20px; }
+.skills-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.mb-20 { margin-bottom: 20px; }
+.flex-1 { flex: 1; }
+.flex-2 { flex: 2; }
+.bg-f0 { background: #f0f0f0; }
+.h-60vh { height: 60vh; }
+.h-70vh { height: 70vh; }
+.h-80vh { height: 80vh; }
+.gap-10 { gap: 10px; }
+.game-actions-divider { border-left: 2px solid #374151; margin: 0 10px; }
+.dice-menu-title { margin-top: 0; margin-bottom: 10px; color: var(--gold); }
+.d20-btn { border-color: var(--gold); }
+.levelup-desc { margin-bottom: 20px; font-weight: bold; }
 
 .stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; max-width: 400px; margin: 20px auto; font-size: 1.2rem; }
 .stat-row { display: flex; justify-content: space-between; background: #374151; padding: 10px 15px; border-radius: 8px;}
@@ -140,7 +166,7 @@ button:hover { background-color: var(--gold-hover); transform: scale(1.05); }
 
 /* КНОПКИ ПАНЕЛЕЙ */
 .panel-buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 40px; }
-.btn-panel { background: #f8f8f8; border: 2px solid #d4d4d4; color: #333; padding: 15px; font-size: 1.1rem; border-radius: 10px; font-weight: bold; }
+.btn-panel { background: #f8f8f8; border: 2px solid #d4d4d4; color: #333; padding: 15px; font-size: 1.1rem; border-radius: 10px; font-weight: bold; cursor: pointer;}
 .btn-panel:hover { background: #eee; border-color: var(--gold); transform: translateY(-3px); box-shadow: 0 5px 10px rgba(0,0,0,0.1); }
 
 /* =========================================
@@ -205,7 +231,6 @@ button:hover { background-color: var(--gold-hover); transform: scale(1.05); }
 .dice-buttons button:hover { background: var(--gold); color: #000; }
 .dice-result { margin-top: 15px; font-size: 2.5rem; font-weight: bold; background: #111; color: #fff; border-radius: 8px; padding: 5px; transition: transform 0.2s ease, color 0.2s ease; }
 
-
 /* =========================================
    АДАПТАЦИЯ ДЛЯ МОБИЛЬНЫХ ТЕЛЕФОНОВ
    ========================================= */
@@ -217,9 +242,7 @@ button:hover { background-color: var(--gold-hover); transform: scale(1.05); }
     .char-info-grid { grid-template-columns: repeat(2, 1fr); }
 
     .compact-body { flex-direction: column; }
-    .col-stats {
-        width: 100%; display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px 10px;
-    }
+    .col-stats { width: 100%; display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px 10px; }
     .col-center { max-width: 100%; width: 100%; }
 
     .combat-row { height: auto; min-height: 85px; }
@@ -236,31 +259,24 @@ button:hover { background-color: var(--gold-hover); transform: scale(1.05); }
 
     .game-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
     .game-actions button { width: 100%; margin: 0; font-size: 0.9rem; }
-    .game-actions span { display: none; }
+    .game-actions .game-actions-divider { display: none; }
     .game-actions button:last-child { grid-column: span 2; }
+    
+    .xp-btn-container { grid-column: span 2; display: flex; gap: 5px; }
+    .btn-xp { font-size: 0.85rem; padding: 10px 0; }
 
     /* МОДАЛЬНЫЕ ОКНА НА ТЕЛЕФОНЕ */
-    .modal-content {
-        padding: 20px 15px;
-        height: auto !important; 
-    }
+    .modal-content { padding: 20px 15px; height: auto !important; }
     
-    .modal-content > div[style*="display:flex"],
-    .modal-content > div[style*="display: flex"] {
-        flex-direction: column !important; gap: 15px !important;
-    }
-    .skills-box > div[style*="display:grid"],
-    .skills-box > div[style*="display: grid"],
-    .personality-container {
-        grid-template-columns: 1fr !important;
-    }
+    .modal-content-flex { flex-direction: column !important; gap: 15px !important; }
+    .skills-grid, .personality-grid { grid-template-columns: 1fr !important; }
+
     .equipment-container { flex-direction: column; }
     .money-col { flex-direction: row; width: 100%; justify-content: space-between; margin-bottom: 10px; }
     .money-box { flex: 1; border-radius: 8px; margin: 0 2px; }
 
     /* ИСПРАВЛЕНИЕ СПЛЮСНУТЫХ ЯЧЕЕК ОСОБЕННОСТЕЙ, СНАРЯЖЕНИЯ И ВЛАДЕНИЙ */
     .features-box, .equipment-box, #modal-prof .framed-box {
-        min-height: 400px !important; /* Увеличенная высота для удобства печати на телефоне */
-        flex-shrink: 0; 
+        min-height: 400px !important; flex-shrink: 0; 
     }
 }
