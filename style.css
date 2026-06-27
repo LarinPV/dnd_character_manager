@@ -87,7 +87,12 @@ button:hover { background-color: var(--gold-hover); transform: scale(1.05); }
 .dnd-sheet input, .dnd-sheet textarea {
     border: none; background: transparent; font-family: 'Georgia', serif; color: #111; outline: none; width: 100%; box-sizing: border-box;
 }
-.dnd-sheet textarea { resize: none; line-height: 1.4; font-size: 1rem; height: 100%; }
+
+/* ИСПРАВЛЕНИЕ ТЕКСТОВЫХ ПОЛЕЙ (чтобы растягивались по высоте) */
+.dnd-sheet textarea { 
+    resize: none; line-height: 1.4; font-size: 1rem; height: 100%; flex: 1; min-height: 150px;
+}
+
 .muted-text { font-size: 0.8rem; color: #666; font-family: sans-serif; }
 
 /* ШАПКА */
@@ -208,7 +213,16 @@ button:hover { background-color: var(--gold-hover); transform: scale(1.05); }
 .money-box input { width: 100%; text-align: center; font-size: 0.9rem; border: none; background: transparent; padding: 0; }
 
 .traits-box { height: 90px; padding: 10px; }
-.game-actions { text-align: center; margin-top: 30px; padding-top: 20px; }
+
+/* ИСПРАВЛЕНИЕ: Панель действий центрируется под листом на ПК */
+.game-actions { 
+    text-align: center; 
+    margin: 30px auto 0 auto; 
+    padding-top: 20px; 
+    max-width: 900px; 
+    width: 100%; 
+    box-sizing: border-box; 
+}
 
 /* ПЛАВАЮЩИЙ КУБИК */
 .dice-container {
@@ -257,9 +271,11 @@ button:hover { background-color: var(--gold-hover); transform: scale(1.05); }
     .framed-box { margin-bottom: 15px; }
     .panel-buttons { grid-template-columns: 1fr; gap: 10px; }
 
-    .game-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-    .game-actions button { width: 100%; margin: 0; font-size: 0.9rem; }
+    /* ИСПРАВЛЕНИЕ: Ровная сетка кнопок Экспорт/Импорт и Меню */
+    .game-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; align-items: center; }
+    .game-actions button { width: 100%; margin: 0; font-size: 0.9rem; padding: 12px 0; }
     .game-actions .game-actions-divider { display: none; }
+    .game-actions input[type="file"] { display: none; }
     .game-actions button:last-child { grid-column: span 2; }
     
     .xp-btn-container { grid-column: span 2; display: flex; gap: 5px; }

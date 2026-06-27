@@ -765,6 +765,7 @@ function updateCalculations() {
     character.initiative = dexMod > 0 ? `+${dexMod}` : `${dexMod}`;
     document.getElementById('sheet-init').value = character.initiative;
 
+    // ИСПРАВЛЕНИЕ: Масштабирование урона без нарушения регулярных выражений
     if (character.attacks) {
         let strMod = calculateModifierRaw(character.stats['strength'] || 10);
         let intMod = calculateModifierRaw(character.stats['intelligence'] || 10);
@@ -796,20 +797,20 @@ function updateCalculations() {
             let dmgDueling = (strMod + 2 > 0 ? "+" + (strMod + 2) : (strMod + 2 < 0 ? (strMod + 2) : ""));
             text = text.replace(/Длинный меч \| [+\-0-9]+ \| 1d8[+\-0-9]* рубящий/, `Длинный меч | ${hitStr} | 1d8${dmgDueling} рубящий`);
         } else if (character.class === "Волшебник") {
-            text = text.replace(/Огненный снаряд \| [+\-0-9]+ \| \d+d10 огонь/, `Огненный снаряд | ${hitInt} | ${cantripDice}d10 огонь`);
+            text = text.replace(/Огненный снаряд \| [+\-0-9]+ \| .*?огонь/, `Огненный снаряд | ${hitInt} | ${cantripDice}d10 огонь`);
         } else if (character.class === "Жрец") {
             text = text.replace(/Булава \| [+\-0-9]+ \| 1d6[+\-0-9]* дробящий/, `Булава | ${hitStr} | 1d6${dmgStr} дробящий`);
-            text = text.replace(/Священное пламя \| Спас Лов( СЛ \d+ )?\| \d+d8 излуч./, `Священное пламя | Спас Лов СЛ ${dcWis} | ${cantripDice}d8 излуч.`);
+            text = text.replace(/Священное пламя \| Спас Лов.*?\| .*?излуч\./, `Священное пламя | Спас Лов СЛ ${dcWis} | ${cantripDice}d8 излуч.`);
         } else if (character.class === "Бард") {
             text = text.replace(/Рапира \| [+\-0-9]+ \| 1d8[+\-0-9]* колющий/, `Рапира | ${hitFin} | 1d8${dmgFin} колющий`);
-            text = text.replace(/Злая насмешка \| Спас Муд( СЛ \d+ )?\| \d+d4 псих./, `Злая насмешка | Спас Муд СЛ ${dcCha} | ${cantripDice}d4 псих.`);
+            text = text.replace(/Злая насмешка \| Спас Муд.*?\| .*?псих\./, `Злая насмешка | Спас Муд СЛ ${dcCha} | ${cantripDice}d4 псих.`);
         } else if (character.class === "Друид") {
             text = text.replace(/Боевой посох \| [+\-0-9]+ \| 1d6[+\-0-9]* дробящий/, `Боевой посох | ${hitStr} | 1d6${dmgStr} дробящий`);
-            text = text.replace(/Производство пламени \| [+\-0-9]+ \| \d+d8 огонь/, `Производство пламени | ${hitWis} | ${cantripDice}d8 огонь`);
+            text = text.replace(/Производство пламени \| [+\-0-9]+ \| .*?огонь/, `Производство пламени | ${hitWis} | ${cantripDice}d8 огонь`);
         } else if (character.class === "Монах") {
             let monkDice = character.level >= 17 ? "1d10" : (character.level >= 11 ? "1d8" : (character.level >= 5 ? "1d6" : "1d4"));
             text = text.replace(/Короткий меч \| [+\-0-9]+ \| 1d6[+\-0-9]* колющий/, `Короткий меч | ${hitFin} | 1d6${dmgFin} колющий`);
-            text = text.replace(/Безоружный удар \| [+\-0-9]+ \| 1d\d+[+\-0-9]* дробящий/, `Безоружный удар | ${hitFin} | ${monkDice}${dmgFin} дробящий`);
+            text = text.replace(/Безоружный удар \| [+\-0-9]+ \| .*?дробящий/, `Безоружный удар | ${hitFin} | ${monkDice}${dmgFin} дробящий`);
         } else if (character.class === "Паладин") {
             text = text.replace(/Длинный меч \| [+\-0-9]+ \| 1d8[+\-0-9]* рубящий/, `Длинный меч | ${hitStr} | 1d8${dmgStr} рубящий`);
             text = text.replace(/Метательное копье \| [+\-0-9]+ \| 1d6[+\-0-9]* колющий/, `Метательное копье | ${hitStr} | 1d6${dmgStr} колющий`);
@@ -820,12 +821,13 @@ function updateCalculations() {
             let sneakDice = Math.ceil(character.level / 2);
             text = text.replace(/Рапира \| [+\-0-9]+ \| 1d8[+\-0-9]* колющий/, `Рапира | ${hitFin} | 1d8${dmgFin} колющий`);
             text = text.replace(/Кинжал \| [+\-0-9]+ \| 1d4[+\-0-9]* колющий/, `Кинжал | ${hitFin} | 1d4${dmgFin} колющий`);
-            text = text.replace(/Скрытая атака \| Доп\. урон \| \+\d+d6 колющий/, `Скрытая атака | Доп. урон | +${sneakDice}d6 колющий`);
+            text = text.replace(/Скрытая атака \| Доп\. урон \| .*?колющий/, `Скрытая атака | Доп. урон | +${sneakDice}d6 колющий`);
         } else if (character.class === "Чародей") {
-            text = text.replace(/Огненный снаряд \| [+\-0-9]+ \| \d+d10 огонь/, `Огненный снаряд | ${hitCha} | ${cantripDice}d10 огонь`);
+            text = text.replace(/Огненный снаряд \| [+\-0-9]+ \| .*?огонь/, `Огненный снаряд | ${hitCha} | ${cantripDice}d10 огонь`);
             text = text.replace(/Кинжал \| [+\-0-9]+ \| 1d4[+\-0-9]* колющий/, `Кинжал | ${hitFin} | 1d4${dmgFin} колющий`);
         } else if (character.class === "Колдун") {
-            text = text.replace(/Мистический заряд \| [+\-0-9]+ \| \d+d10 силовой/, `Мистический заряд | ${hitCha} | ${cantripDice}d10 силовой`);
+            let ebText = cantripDice > 1 ? `${cantripDice}x 1d10` : `1d10`;
+            text = text.replace(/Мистический заряд \| [+\-0-9]+ \| .*?силовой/, `Мистический заряд | ${hitCha} | ${ebText} силовой`);
             text = text.replace(/Кинжал \| [+\-0-9]+ \| 1d4[+\-0-9]* колющий/, `Кинжал | ${hitFin} | 1d4${dmgFin} колющий`);
         }
         
@@ -918,7 +920,46 @@ function updateAllUI() {
         `;
     }
 
+    // ИСПРАВЛЕНИЕ: Генерация кнопок для чтения книги игрока (Класс и Архетип)
+    let clsBtnContainer = document.getElementById("class-info-buttons");
+    if (clsBtnContainer) {
+        clsBtnContainer.innerHTML = `
+            <button class="btn-panel" style="font-size: 0.85rem; padding: 10px;" onclick="showBookDescription('class')">📖 Класс: ${character.class || 'Нет'}</button>
+            ${character.subclass ? `<button class="btn-panel" style="font-size: 0.85rem; padding: 10px;" onclick="showBookDescription('subclass')">📖 Архетип: ${character.subclass}</button>` : ''}
+        `;
+    }
+
     updateCalculations();
+}
+
+// НОВАЯ ФУНКЦИЯ ДЛЯ ВЫВОДА СПРАВОЧНОЙ ИНФОРМАЦИИ
+function showBookDescription(type) {
+    let title = type === 'class' ? character.class : character.subclass;
+    if (!title) return;
+    
+    let content = "";
+    document.getElementById("book-title").textContent = title;
+    
+    if (type === 'class') {
+        content += `КЛАССОВЫЕ УМЕНИЯ (${title})\nПоказаны особенности, доступные по мере роста в уровне:\n\n`;
+        for (let i = 1; i <= 20; i++) {
+            let abilities = getAbilitiesForLevel(title, null, i);
+            let filtered = abilities.filter(a => !a.startsWith('[')); // Отсекаем умения архетипа, оставляем базу
+            if (filtered.length > 0) {
+                content += `[Уровень ${i}]\n- ` + filtered.join("\n- ") + `\n\n`;
+            }
+        }
+    } else {
+        content += `ОСОБЕННОСТИ АРХЕТИПА (${title})\n\n`;
+        for (let i = 1; i <= 20; i++) {
+            if (archFeatures[title] && archFeatures[title][i]) {
+                content += `[Уровень ${i}]\n- ${archFeatures[title][i]}\n\n`;
+            }
+        }
+    }
+    
+    document.getElementById("book-content").textContent = content;
+    openModal('modal-book-text');
 }
 
 function updateChar(key, value) {

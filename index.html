@@ -48,8 +48,7 @@
     <section class="screen" id="screen-subrace">
         <h2>Выберите подрасу</h2>
         <div class="cards" id="subrace-cards">
-            <!-- Заполняется динамически из JS -->
-        </div>
+            </div>
     </section>
 
     <section class="screen" id="screen-class">
@@ -164,9 +163,8 @@
         </div>
 
         <div class="game-actions">
-            <!-- Контейнер для 3 кнопок опыта (адаптивный) -->
             <div id="xp-buttons-container" class="xp-btn-container"></div>
-            <br>
+            
             <button onclick="exportTXT()" class="btn-export">Экспорт</button>
             <button onclick="document.getElementById('importFileSheet').click()" class="btn-secondary">Импорт</button>
             <input type="file" id="importFileSheet" accept=".txt" class="hidden" onchange="importTXT(event)">
@@ -189,14 +187,11 @@
     </div>
 </div>
 
-<!-- ================= МОДАЛЬНЫЕ ОКНА (ВКЛАДКИ И ПОВЫШЕНИЕ УРОВНЯ) ================= -->
-
 <div id="modal-levelup" class="modal-backdrop hidden">
     <div class="modal-content dnd-sheet flex-col" style="max-width: 550px;">
         <h2 class="modal-title">Взят новый уровень!</h2>
         <div id="levelup-options" class="flex-col gap-10">
-            <!-- Наполнение окна генерируется динамически -->
-        </div>
+            </div>
     </div>
 </div>
 
@@ -298,7 +293,18 @@
         <div class="features-box framed-box flex-1">
             <textarea id="sheet-features" oninput="updateChar('features', this.value)" placeholder="Опишите ваши расовые и классовые особенности..."></textarea>
         </div>
+        
+        <div id="class-info-buttons" class="panel-buttons" style="margin-top: 15px; grid-template-columns: 1fr 1fr; gap: 10px;"></div>
+        
         <div class="modal-footer"><button class="btn-secondary" onclick="closeModal('modal-features')">Закрыть</button></div>
+    </div>
+</div>
+
+<div id="modal-book-text" class="modal-backdrop hidden" onclick="closeOnBackdrop(event, 'modal-book-text')">
+    <div class="modal-content dnd-sheet flex-col h-80vh">
+        <button class="modal-close" onclick="closeModal('modal-book-text')">✖</button>
+        <h2 id="book-title" class="modal-title" style="color: var(--gold);">Описание</h2>
+        <div id="book-content" style="white-space: pre-wrap; font-size: 0.95rem; line-height: 1.5; text-align: left; overflow-y: auto; flex: 1; padding-right: 10px;"></div>
     </div>
 </div>
 
