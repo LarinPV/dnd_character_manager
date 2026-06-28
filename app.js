@@ -453,6 +453,24 @@ function addXP(amount) {
     checkLevelUp();
 }
 
+function addOneLevel() {
+    if (character.level >= 20) {
+        alert("Достигнут максимальный (20) уровень!");
+        return;
+    }
+    
+    // Массив порогов опыта для каждого уровня
+    const xpThresholds = [0, 300, 900, 2700, 6500, 14000, 23000, 34000, 48000, 64000, 85000, 100000, 120000, 140000, 165000, 195000, 225000, 265000, 305000, 355000];
+    
+    // Устанавливаем опыт ровно на порог следующего уровня
+    // Индекс массива совпадает с текущим уровнем (например, для апа с 1 на 2 нужен индекс 1 -> 300 xp)
+    character.xp = xpThresholds[character.level];
+    
+    // Обновляем инпут на листе и запускаем стандартную проверку повышения
+    document.getElementById("sheet-xp").value = character.xp;
+    checkLevelUp();
+}
+
 function checkLevelUp() {
     let oldLevel = character.level;
     let targetLevel = 1;
@@ -995,6 +1013,7 @@ function updateAllUI() {
             <button onclick="addXP(${xp1})" class="btn-xp">+${xp1}</button>
             <button onclick="addXP(${xp2})" class="btn-xp">+${xp2}</button>
             <button onclick="addXP(${xp3})" class="btn-xp">+${xp3}</button>
+            <button onclick="addOneLevel()" class="btn-xp" style="background-color: var(--gold); color: #000; font-weight: bold;" title="Повысить уровень">+1 Ур.</button>
         `;
     }
 
