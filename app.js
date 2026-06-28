@@ -13,6 +13,12 @@ let character = {
     traits: "", ideals: "", bonds: "", flaws: ""
 };
 
+// --- СИСТЕМА ОТКАТОВ (UNDO) И ТЕМЫ ---
+let historyStack = [];
+let saveTimeout;
+let isUndoing = false;
+let isDarkTheme = localStorage.getItem("dnd_theme") === "dark";
+
 const skillToStat = {
     acr: 'dexterity', ath: 'strength', prc: 'wisdom', sur: 'wisdom', ani: 'wisdom',
     inti: 'charisma', prf: 'charisma', his: 'intelligence', slg: 'dexterity',
@@ -41,7 +47,6 @@ const randomFlawsList = [
     "Я панически боюсь замкнутых пространств.", "Я никогда не признаю своих ошибок.", "Я слишком доверяю красивым людям."
 ];
 
-// Данные подрас
 const subraceData = {
     "Дварф": [
         {name: "Горный дварф", desc: "+2 Сила. Владение легкой/средней броней."},
@@ -62,7 +67,6 @@ const subraceData = {
     ]
 };
 
-// Данные подклассов при повышении уровня
 const subclassData = {
     "Варвар": { lvl: 3, opts: ["Путь Берсерка", "Путь Тотемного воина"] },
     "Бард": { lvl: 3, opts: ["Коллегия Знаний", "Коллегия Доблести"] },
@@ -78,7 +82,6 @@ const subclassData = {
     "Колдун": { lvl: 3, opts: ["Договор Гримуара", "Договор Клинка", "Договор Цепи"] }
 };
 
-// Расшифровка особенностей конкретных архетипов для добавления их в текст листа
 const archFeatures = {
     "Путь Берсерка": {3: "Бешенство (доп. атака бонусным действием)", 6: "Бездумная ярость (иммунитет к испугу/очарованию)", 10: "Устрашающее присутствие (пугает врагов действием)", 14: "Ответный удар (атака реакцией при получении урона)"},
     "Путь Тотемного воина": {3: "Дух тотема (сопротивление урону), Искатель духов (ритуалы природы)", 6: "Аспект зверя (пассивные бонусы вне боя)", 10: "Странствующий в духах (призыв природы)", 14: "Тотемное родство (сильные эффекты в бою)"},
@@ -112,18 +115,12 @@ const archFeatures = {
 };
 
 const classStatPriority = {
-    "Варвар": ["strength", "constitution"],
-    "Воин": ["strength", "constitution"],
-    "Волшебник": ["intelligence", "dexterity"],
-    "Жрец": ["wisdom", "strength"],
-    "Бард": ["charisma", "dexterity"],
-    "Друид": ["wisdom", "constitution"],
-    "Монах": ["dexterity", "wisdom"],
-    "Паладин": ["strength", "charisma"],
-    "Следопыт": ["dexterity", "wisdom"],
-    "Плут": ["dexterity", "intelligence"],
-    "Чародей": ["charisma", "constitution"],
-    "Колдун": ["charisma", "dexterity"]
+    "Варвар": ["strength", "constitution"], "Воин": ["strength", "constitution"],
+    "Волшебник": ["intelligence", "dexterity"], "Жрец": ["wisdom", "strength"],
+    "Бард": ["charisma", "dexterity"], "Друид": ["wisdom", "constitution"],
+    "Монах": ["dexterity", "wisdom"], "Паладин": ["strength", "charisma"],
+    "Следопыт": ["dexterity", "wisdom"], "Плут": ["dexterity", "intelligence"],
+    "Чародей": ["charisma", "constitution"], "Колдун": ["charisma", "dexterity"]
 };
 
 function getRandom(arr, count = 1) { return [...arr].sort(() => 0.5 - Math.random()).slice(0, count).join(", "); }
@@ -150,8 +147,33 @@ window.onload = () => {
         document.getElementById("loadGameBtn").classList.remove("hidden");
         let clearBtn = document.getElementById("clearSaveBtn");
         if(clearBtn) clearBtn.classList.remove("hidden");
+        
+        character = JSON.parse(saved);
+        historyStack.push(JSON.stringify(character)); // Загружаем начальное состояние для отката
     }
+    applyTheme(); // Инициализация темы при загрузке
 };
+
+// Функции управления темой
+function applyTheme() {
+    if (isDarkTheme) {
+        document.body.classList.add("dark-mode-active");
+        document.querySelectorAll('.dnd-sheet').forEach(el => el.classList.add('dark-sheet'));
+        let btn = document.getElementById("theme-btn");
+        if(btn) btn.innerText = "☀️ Светлая тема";
+    } else {
+        document.body.classList.remove("dark-mode-active");
+        document.querySelectorAll('.dnd-sheet').forEach(el => el.classList.remove('dark-sheet'));
+        let btn = document.getElementById("theme-btn");
+        if(btn) btn.innerText = "🌙 Темная тема";
+    }
+}
+
+function toggleTheme() {
+    isDarkTheme = !isDarkTheme;
+    localStorage.setItem("dnd_theme", isDarkTheme ? "dark" : "light");
+    applyTheme();
+}
 
 function nextScreen(id) {
     document.querySelector('.screen.active').classList.remove('active');
@@ -179,8 +201,7 @@ function setName() {
 }
 
 function setRace(race) { 
-    character.race = race; 
-    character.subrace = "";
+    character.race = race; character.subrace = "";
     if (subraceData[race]) {
         let container = document.getElementById('subrace-cards');
         container.innerHTML = subraceData[race].map(sr => 
@@ -189,18 +210,14 @@ function setRace(race) {
             </div>`
         ).join('');
         nextScreen('screen-subrace');
-    } else {
-        nextScreen('screen-class'); 
-    }
+    } else nextScreen('screen-class'); 
 }
 
 function setSubrace(subrace) { character.subrace = subrace; nextScreen('screen-class'); }
 
 function setClass(cls) { 
-    character.class = cls; 
-    character.subclass = "";
-    generateStats(true); 
-    nextScreen('screen-stats'); 
+    character.class = cls; character.subclass = "";
+    generateStats(true); nextScreen('screen-stats'); 
 }
 
 function rollStat() {
@@ -219,9 +236,8 @@ function generateStats(isStandard = true) {
     character.stats = {};
     for (let i = 0; i < 6; i++) character.stats[keys[i]] = values[i];
     
-    if (character.race === "Человек") {
-        for (let key in character.stats) character.stats[key] += 1;
-    } else if (character.race === "Эльф") character.stats.dexterity += 2;
+    if (character.race === "Человек") { for (let key in character.stats) character.stats[key] += 1; }
+    else if (character.race === "Эльф") character.stats.dexterity += 2;
     else if (character.race === "Дварф") character.stats.constitution += 2;
     else if (character.race === "Полурослик") character.stats.dexterity += 2;
     else if (character.race === "Драконорожденный") { character.stats.strength += 2; character.stats.charisma += 1; }
@@ -260,16 +276,16 @@ function setBackground(bg) {
         raceFeatures = "[Раса: Эльф]\n- Тёмное зрение (60 фт.)\n- Острые чувства: навык Восприятие.\n- Наследие фей: преимущество против очарования, иммунитет к сну.\n- Транс: 4 часа заменяют 8 часов сна.";
         character.skillsProf.prc = true; raceLangs = "Общий и Эльфийский.";
         if (character.subrace === "Высший эльф") { raceFeatures += "\n[Высший эльф] Доп. заговор волшебника, доп. язык."; raceLangs += " + 1 язык."; }
-        else if (character.subrace === "Лесной эльф") { raceFeatures += "\n[Лесной эльф] Базовая скорость 35 фт. Маскировка в дикой природе."; character.speed = "35"; }
+        else if (character.subrace === "Лесной эльф") { raceFeatures += "\n[Лесной эльф] Базовая скорость 35 фт. Маскировка в дикой природе."; }
         else if (character.subrace === "Тёмный эльф (Дроу)") { raceFeatures += "\n[Дроу] Тёмное зрение 120 фт. Магия дроу. Чувствительность к солнцу."; }
     } else if (character.race === "Дварф") {
         raceFeatures = "[Раса: Дварф]\n- Тёмное зрение (60 фт.)\n- Дварфская устойчивость: преимущество против яда, сопротивление яду.\n- Владение топорами/молотами.\n- Знание камня (История).";
-        character.speed = "25"; raceLangs = "Общий и Дварфский.";
+        raceLangs = "Общий и Дварфский.";
         if (character.subrace === "Горный дварф") raceFeatures += "\n[Горный дварф] Владение легкими и средними доспехами.";
         else if (character.subrace === "Холмовой дварф") raceFeatures += "\n[Холмовой дварф] Дварфская выдержка (+1 макс ПЗ за уровень).";
     } else if (character.race === "Полурослик") {
         raceFeatures = "[Раса: Полурослик]\n- Везучий: переброс '1' на атаках/проверках.\n- Храбрый: преимущество против испуга.\n- Проворство: проход через крупных существ.";
-        character.speed = "25"; raceLangs = "Общий и язык Полуросликов.";
+        raceLangs = "Общий и язык Полуросликов.";
         if (character.subrace === "Легконогий") raceFeatures += "\n[Легконогий] Естественная скрытность (можно прятаться за союзниками).";
         else if (character.subrace === "Коренастый") raceFeatures += "\n[Коренастый] Устойчивость к ядам (как у дварфов).";
     } else if (character.race === "Драконорожденный") {
@@ -277,7 +293,7 @@ function setBackground(bg) {
         raceLangs = "Общий и Драконий.";
     } else if (character.race === "Гном") {
         raceFeatures = "[Раса: Гном]\n- Тёмное зрение (60 фт.)\n- Гномья хитрость: преимущество на Инт, Муд, Хар спасброски против магии.";
-        character.speed = "25"; raceLangs = "Общий и Гномий.";
+        raceLangs = "Общий и Гномий.";
         if (character.subrace === "Лесной гном") raceFeatures += "\n[Лесной гном] Фокус Малая Иллюзия, общение с мелкими зверями.";
         else if (character.subrace === "Скальный гном") raceFeatures += "\n[Скальный гном] Ремесленные знания. Жестянщик (создание механизмов).";
     } else if (character.race === "Полуэльф") {
@@ -409,7 +425,6 @@ function addXP(amount) {
 function checkLevelUp() {
     let oldLevel = character.level;
     let targetLevel = 1;
-    // Официальные пороги опыта 5-й редакции (до 20 уровня)
     const xpThresholds = [0, 300, 900, 2700, 6500, 14000, 23000, 34000, 48000, 64000, 85000, 100000, 120000, 140000, 165000, 195000, 225000, 265000, 305000, 355000];
     
     for (let i = 19; i >= 0; i--) {
@@ -428,22 +443,18 @@ function checkLevelUp() {
     }
 }
 
-// Получение списка способностей для конкретного уровня
 function getAbilitiesForLevel(cls, sc, lvl) {
     let features = [];
     let asiText = "Увеличение характеристик (или черта. Увеличьте статы вручную в листе)";
     
-    // 1. Повсеместное Увеличение Характеристик (ASI)
     if ([4,8,12,16,19].includes(lvl)) features.push(asiText);
     if (cls === "Воин" && [6,14].includes(lvl)) features.push(asiText);
     if (cls === "Плут" && lvl === 10) features.push(asiText);
 
-    // 2. Способности Архетипа/Подкласса
     if (sc && archFeatures[sc] && archFeatures[sc][lvl]) {
         features.push(`[${sc}]: ` + archFeatures[sc][lvl]);
     }
 
-    // 3. Базовые классовые способности (PHB)
     switch(cls) {
         case "Варвар":
             if(lvl===2) features.push("Безрассудная атака (преим. на атаку, по вам бьют с преим.), Чувство опасности (преим. на ЛОВ спасброски)");
@@ -621,11 +632,8 @@ function getAbilitiesForLevel(cls, sc, lvl) {
     return features;
 }
 
-// Отображение диалогового окна повышения уровня
 function showLevelUpModal(oldLvl, newLvl, subclassOpts) {
     let newAbilities = [];
-    
-    // Собираем способности (включая архетипные, если архетип УЖЕ был выбран на предыдущих уровнях)
     for (let lvl = oldLvl + 1; lvl <= newLvl; lvl++) {
         newAbilities.push(...getAbilitiesForLevel(character.class, character.subclass, lvl));
     }
@@ -653,17 +661,13 @@ function showLevelUpModal(oldLvl, newLvl, subclassOpts) {
     document.getElementById("modal-levelup").classList.remove("hidden");
 }
 
-// Применение нового уровня и сохранение способностей в текст
 function commitLevelUp(oldLvl, newLvl, chosenSubclass) {
     document.getElementById("modal-levelup").classList.add("hidden");
     
-    if (chosenSubclass) {
-        character.subclass = chosenSubclass;
-    }
+    if (chosenSubclass) character.subclass = chosenSubclass;
 
     let newAbilities = [];
     for (let lvl = oldLvl + 1; lvl <= newLvl; lvl++) {
-        // Вызываем еще раз, теперь с учетом свежевыбранного подкласса
         newAbilities.push(...getAbilitiesForLevel(character.class, character.subclass, lvl));
     }
 
@@ -672,7 +676,7 @@ function commitLevelUp(oldLvl, newLvl, chosenSubclass) {
         character.features += abilitiesText;
     }
 
-    character.level = newLvl; // Устанавливаем новый уровень ПЕРЕД перерасчетом
+    character.level = newLvl; 
 
     let oldMax = character.maxHp;
     updateCalculations(); 
@@ -700,6 +704,7 @@ function updateCalculations() {
     let pb = Math.floor((character.level - 1) / 4) + 2;
     document.getElementById('sheet-prof').value = "+" + pb;
 
+    // --- РАСЧЕТ ИСЦЕЛЕНИЯ (HP) ---
     let conMod = calculateModifierRaw(character.stats['constitution'] || 10);
     let hpBase = 0, hpPerLevel = 0;
     
@@ -731,41 +736,66 @@ function updateCalculations() {
         if(document.getElementById('sheet-hp')) document.getElementById('sheet-hp').value = character.hp;
     }
 
+    // --- РАСЧЕТ КД (AC) ---
     let dexMod = calculateModifierRaw(character.stats['dexterity'] || 10);
     let wisMod = calculateModifierRaw(character.stats['wisdom'] || 10);
     let conModActual = calculateModifierRaw(character.stats['constitution'] || 10);
 
-    if (character.class === "Варвар") {
-        character.ac = 10 + dexMod + conModActual;
-    } else if (character.class === "Монах") {
-        character.ac = 10 + dexMod + wisMod;
-    } else if (character.class === "Чародей") {
-        if (character.subclass === "Наследие Драконов" || (character.level < 3 && character.features.includes("Наследие драконов"))) {
-            character.ac = 13 + dexMod; 
-        } else {
-            character.ac = 10 + dexMod;
-        }
-    } else if (character.class === "Волшебник") {
-        character.ac = 10 + dexMod;
-    } else if (["Бард", "Плут", "Колдун"].includes(character.class)) {
-        character.ac = 11 + dexMod; 
-    } else if (["Жрец", "Друид", "Следопыт"].includes(character.class)) {
+    if (character.class === "Варвар") { character.ac = 10 + dexMod + conModActual; } 
+    else if (character.class === "Монах") { character.ac = 10 + dexMod + wisMod; } 
+    else if (character.class === "Чародей") {
+        if (character.subclass === "Наследие Драконов" || (character.level < 3 && character.features.includes("Наследие драконов"))) { character.ac = 13 + dexMod; } 
+        else { character.ac = 10 + dexMod; }
+    } 
+    else if (character.class === "Волшебник") { character.ac = 10 + dexMod; } 
+    else if (["Бард", "Плут", "Колдун"].includes(character.class)) { character.ac = 11 + dexMod; } 
+    else if (["Жрец", "Друид", "Следопыт"].includes(character.class)) {
         character.ac = 14 + Math.min(2, dexMod); 
         if(character.class === "Жрец") character.ac = 13 + Math.min(2, dexMod) + 2; 
         if(character.class === "Друид") character.ac = 11 + dexMod + 2; 
-    } else if (["Воин", "Паладин"].includes(character.class)) {
+    } 
+    else if (["Воин", "Паладин"].includes(character.class)) {
         character.ac = 16; 
         if(character.class === "Воин") character.ac = 13 + Math.min(2, dexMod) + 2; 
-    } else {
-        character.ac = 10 + dexMod;
-    }
+    } 
+    else { character.ac = 10 + dexMod; }
     
     document.getElementById('sheet-ac').value = character.ac;
 
-    character.initiative = dexMod > 0 ? `+${dexMod}` : `${dexMod}`;
+    // --- РАСЧЕТ СКОРОСТИ (ИСПРАВЛЕНИЕ БАГА) ---
+    let baseSpeed = 30;
+    if (["Дварф", "Полурослик", "Гном"].includes(character.race)) baseSpeed = 25;
+    if (character.subrace === "Лесной эльф") baseSpeed = 35;
+    
+    let speedBonus = 0;
+    if (character.class === "Монах") {
+        if (character.level >= 18) speedBonus = 30;
+        else if (character.level >= 14) speedBonus = 25;
+        else if (character.level >= 10) speedBonus = 20;
+        else if (character.level >= 6) speedBonus = 15;
+        else if (character.level >= 2) speedBonus = 10;
+    } else if (character.class === "Варвар" && character.level >= 5) {
+        speedBonus = 10;
+    }
+
+    character.speed = (baseSpeed + speedBonus).toString();
+    let speedInput = document.getElementById('sheet-speed');
+    if(speedInput) speedInput.value = character.speed;
+
+    // --- ПАССИВКИ БАРДА И ВОИНА (ДЛЯ ИНИЦИАТИВЫ И НАВЫКОВ) ---
+    let halfPb = Math.floor(pb / 2);
+    let isBardJack = (character.class === "Бард" && character.level >= 2);
+    let isChampionAthlete = (character.subclass === "Чемпион" && character.level >= 7);
+
+    // Инициатива
+    let initMod = dexMod;
+    if (isBardJack) initMod += halfPb;
+    else if (isChampionAthlete) initMod += Math.ceil(pb / 2); // Чемпион: половина БМ (окр. вверх) к проверкам Силы, Лов и Тел. Инициатива - это Ловкость.
+    
+    character.initiative = initMod > 0 ? `+${initMod}` : `${initMod}`;
     document.getElementById('sheet-init').value = character.initiative;
 
-    // ИСПРАВЛЕНИЕ: Масштабирование урона без нарушения регулярных выражений
+    // --- АТАКИ И УРОН ---
     if (character.attacks) {
         let strMod = calculateModifierRaw(character.stats['strength'] || 10);
         let intMod = calculateModifierRaw(character.stats['intelligence'] || 10);
@@ -787,7 +817,6 @@ function updateCalculations() {
         let dcWis = 8 + pb + wisMod; 
         let dcCha = 8 + pb + chaMod; 
 
-        // Расчет количества кубиков для заговоров (1 на 1м, 2 на 5м, 3 на 11м, 4 на 17м)
         let cantripDice = character.level >= 17 ? 4 : (character.level >= 11 ? 3 : (character.level >= 5 ? 2 : 1));
 
         if (character.class === "Варвар") {
@@ -838,24 +867,40 @@ function updateCalculations() {
         }
     }
 
+    // --- СПАСБРОСКИ ---
     for (let sv in saveToStat) {
         let statName = saveToStat[sv];
         let score = character.stats[statName] || 10;
         let mod = calculateModifierRaw(score);
         let isProf = character.savesProf && character.savesProf[sv];
-        let total = mod + (isProf ? pb : 0);
+        
+        let bonus = 0;
+        if (isProf) bonus = pb;
+        else if (isChampionAthlete && ['strength', 'dexterity', 'constitution'].includes(statName)) bonus = Math.ceil(pb / 2);
+
+        let total = mod + bonus;
         let elVal = document.getElementById(`sv-${sv}-val`);
         let elChk = document.getElementById(`sv-${sv}`);
         if(elVal) elVal.value = (total > 0 ? '+' : '') + total;
         if(elChk) elChk.checked = isProf;
     }
 
+    // --- НАВЫКИ ---
     for (let sk in skillToStat) {
         let statName = skillToStat[sk];
         let score = character.stats[statName] || 10;
         let mod = calculateModifierRaw(score);
         let isProf = character.skillsProf && character.skillsProf[sk];
-        let total = mod + (isProf ? pb : 0);
+        
+        let bonus = 0;
+        if (isProf) {
+            bonus = pb;
+        } else {
+            if (isBardJack) bonus = halfPb;
+            else if (isChampionAthlete && ['strength', 'dexterity', 'constitution'].includes(statName)) bonus = Math.ceil(pb / 2);
+        }
+
+        let total = mod + bonus;
         let elVal = document.getElementById(`sk-${sk}-val`);
         let elChk = document.getElementById(`sk-${sk}`);
         if(elVal) elVal.value = (total > 0 ? '+' : '') + total;
@@ -863,7 +908,7 @@ function updateCalculations() {
     }
 
     let wisModCalc = calculateModifierRaw(character.stats['wisdom'] || 10);
-    let prcProf = (character.skillsProf && character.skillsProf['prc']) ? pb : 0;
+    let prcProf = (character.skillsProf && character.skillsProf['prc']) ? pb : (isBardJack ? halfPb : 0);
     let passive = 10 + wisModCalc + prcProf;
     document.getElementById('sheet-pass-perc').value = passive;
 }
@@ -904,7 +949,6 @@ function updateAllUI() {
         if(el) el.value = character[field] || "";
     });
 
-    // Динамические кнопки повышения опыта в зависимости от уровня (3 штуки)
     let xpBtnDiv = document.getElementById("xp-buttons-container");
     if (xpBtnDiv) {
         let xp1 = 10, xp2 = 50, xp3 = 100;
@@ -920,7 +964,6 @@ function updateAllUI() {
         `;
     }
 
-    // ИСПРАВЛЕНИЕ: Генерация кнопок для чтения книги игрока (Класс и Архетип)
     let clsBtnContainer = document.getElementById("class-info-buttons");
     if (clsBtnContainer) {
         clsBtnContainer.innerHTML = `
@@ -932,7 +975,6 @@ function updateAllUI() {
     updateCalculations();
 }
 
-// НОВАЯ ФУНКЦИЯ ДЛЯ ВЫВОДА СПРАВОЧНОЙ ИНФОРМАЦИИ
 function showBookDescription(type) {
     let title = type === 'class' ? character.class : character.subclass;
     if (!title) return;
@@ -944,7 +986,7 @@ function showBookDescription(type) {
         content += `КЛАССОВЫЕ УМЕНИЯ (${title})\nПоказаны особенности, доступные по мере роста в уровне:\n\n`;
         for (let i = 1; i <= 20; i++) {
             let abilities = getAbilitiesForLevel(title, null, i);
-            let filtered = abilities.filter(a => !a.startsWith('[')); // Отсекаем умения архетипа, оставляем базу
+            let filtered = abilities.filter(a => !a.startsWith('[')); 
             if (filtered.length > 0) {
                 content += `[Уровень ${i}]\n- ` + filtered.join("\n- ") + `\n\n`;
             }
@@ -1000,7 +1042,35 @@ function rollDice(sides) {
     setTimeout(() => { resultDiv.style.transform = "scale(1)"; resultDiv.style.color = "white"; }, 200);
 }
 
-function saveGame() { localStorage.setItem("dnd_char", JSON.stringify(character)); }
+function saveGame(pushToHistory = true) { 
+    localStorage.setItem("dnd_char", JSON.stringify(character)); 
+    
+    // Дебаунс для истории (чтобы не сохранять каждую напечатанную букву)
+    if (pushToHistory && !isUndoing) {
+        clearTimeout(saveTimeout);
+        saveTimeout = setTimeout(() => {
+            let currentState = JSON.stringify(character);
+            if (historyStack.length === 0 || historyStack[historyStack.length - 1] !== currentState) {
+                historyStack.push(currentState);
+                if (historyStack.length > 30) historyStack.shift(); 
+            }
+        }, 600); 
+    }
+}
+
+function undo() {
+    if (historyStack.length > 1) {
+        isUndoing = true;
+        historyStack.pop(); // Удаляем текущее (ошибочное) состояние
+        let previousState = historyStack[historyStack.length - 1]; // Берем предыдущее
+        character = JSON.parse(previousState);
+        saveGame(false); // Сохраняем в память без добавления в историю
+        updateAllUI();
+        isUndoing = false;
+    } else {
+        alert("Больше нет действий для отмены (или вы только загрузили страницу).");
+    }
+}
 
 function resetGame() {
     if(confirm("Вы уверены, что хотите удалить текущего персонажа? Убедитесь, что сделали экспорт (TXT)!")) {
@@ -1024,6 +1094,7 @@ function resetGame() {
             traits: "", ideals: "", bonds: "", flaws: ""
         };
         
+        historyStack = [];
         alert("Персонаж успешно удален.");
     }
 }

@@ -48,7 +48,7 @@
     <section class="screen" id="screen-subrace">
         <h2>Выберите подрасу</h2>
         <div class="cards" id="subrace-cards">
-            </div>
+        </div>
     </section>
 
     <section class="screen" id="screen-class">
@@ -133,8 +133,8 @@
                 <div class="col-center">
                     <div class="combat-row">
                         <div class="shield-box"><input type="text" id="sheet-ac" oninput="updateChar('ac', this.value)"><label>КД</label></div>
-                        <div class="framed-box init-box" style="background:#f0f0f0;"><input type="text" id="sheet-init" readonly><label class="bottom-label">ИНИЦИАТИВА</label></div>
-                        <div class="framed-box speed-box"><input type="text" id="sheet-speed" oninput="updateChar('speed', this.value)"><label class="bottom-label">СКОРОСТЬ</label></div>
+                        <div class="framed-box init-box"><input type="text" id="sheet-init" readonly><label class="bottom-label">ИНИЦИАТИВА</label></div>
+                        <div class="framed-box speed-box"><input type="text" id="sheet-speed" oninput="updateChar('speed', this.value)" readonly><label class="bottom-label">СКОРОСТЬ</label></div>
                     </div>
 
                     <div class="hp-box framed-box">
@@ -163,13 +163,17 @@
         </div>
 
         <div class="game-actions">
-            <div id="xp-buttons-container" class="xp-btn-container"></div>
+            <div id="xp-buttons-container" class="xp-btn-container btn-full-row"></div>
             
+            <button onclick="undo()" class="btn-secondary" title="Отменить последнее действие">🔙 Откат</button>
+            <button onclick="toggleTheme()" class="btn-secondary" id="theme-btn">🌙 Темная тема</button>
+
             <button onclick="exportTXT()" class="btn-export">Экспорт</button>
             <button onclick="document.getElementById('importFileSheet').click()" class="btn-secondary">Импорт</button>
             <input type="file" id="importFileSheet" accept=".txt" class="hidden" onchange="importTXT(event)">
+            
             <span class="game-actions-divider"></span>
-            <button onclick="nextScreen('screen-home')" class="btn-secondary">В меню</button>
+            <button onclick="nextScreen('screen-home')" class="btn-secondary btn-full-row">В меню</button>
         </div>
     </section>
     
