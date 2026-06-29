@@ -314,3 +314,18 @@ body.dark-mode-active { background-color: #0f172a; }
         min-height: 400px !important; flex-shrink: 0; 
     }
 }
+
+
+/* Исправление вылезающих полей: Черты, Идеалы, Привязанности, Изъяны */
+.traits-box textarea {
+    min-height: 0; /* Отключаем глобальные 150px минимальной высоты */
+    height: 100%;
+}
+
+/* Исправление поля инвентаря в мобильной версии */
+@media (max-width: 768px) {
+    .equipment-container textarea {
+        height: auto; /* Убираем жесткие 100%, чтобы textarea не выталкивалась за пределы контейнера */
+        min-height: 200px; /* Задаем комфортную минимальную высоту для телефона */
+    }
+}

@@ -1077,14 +1077,24 @@ function toggleProficiency(group, key, isChecked) {
 }
 
 function updateStat(statName, value) {
-    const numValue = Number(value);
+    let numValue = Number(value);
+    
+    // Ограничение максимального (99) и минимального (0) значения
+    if (numValue > 99) numValue = 99;
+    if (numValue < 0) numValue = 0;
+
     character.stats[statName] = numValue;
     
     const idMap = { 'strength': 'str', 'dexterity': 'dex', 'constitution': 'con', 'intelligence': 'int', 'wisdom': 'wis', 'charisma': 'cha' };
+    
+    // Возвращаем скорректированное значение обратно в поле ввода (если ввели 150, отобразится 99)
+    document.getElementById(`sheet-${idMap[statName]}`).value = numValue;
+
     let mod = calculateModifierRaw(numValue);
     document.getElementById(`sheet-${idMap[statName]}-mod`).value = mod > 0 ? `+${mod}` : mod;
     
-    saveGame(); updateCalculations(); 
+    saveGame(); 
+    updateCalculations(); 
 }
 
 function rollDice(sides) {
