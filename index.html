@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
@@ -14,11 +14,11 @@
             <h1>D&D Character Manager</h1>
             <p>Создай и веди своего героя прямо в браузере</p>
             <div class="main-actions">
-                <button onclick="nextScreen('screen-name')">Создать персонажа</button>
-                <button id="loadGameBtn" class="btn-secondary hidden" onclick="loadGame()">Продолжить игру</button>
-                <button onclick="document.getElementById('importFileMain').click()" class="btn-export">Импорт (TXT)</button>
+                <button type="button" onclick="nextScreen('screen-name')">Создать персонажа</button>
+                <button type="button" id="loadGameBtn" class="btn-secondary hidden" onclick="loadGame()">Продолжить игру</button>
+                <button type="button" onclick="document.getElementById('importFileMain').click()" class="btn-export">Импорт (TXT)</button>
                 <input type="file" id="importFileMain" accept=".txt" class="hidden" onchange="importTXT(event)">
-                <button id="clearSaveBtn" class="btn-danger hidden" onclick="resetGame()">Очистить</button>
+                <button type="button" id="clearSaveBtn" class="btn-danger hidden" onclick="resetGame()">Очистить</button>
             </div>
         </div>
     </section>
@@ -27,7 +27,7 @@
         <h1>Создание персонажа</h1>
         <h2>Как зовут вашего героя?</h2>
         <input type="text" id="characterName" placeholder="Введите имя...">
-        <button onclick="setName()">Далее</button>
+        <button type="button" onclick="setName()">Далее</button>
     </section>
 
     <section class="screen" id="screen-race">
@@ -71,16 +71,16 @@
 
     <section class="screen" id="screen-stats">
         <h2>Характеристики</h2>
-        <p style="text-align: center; font-size: 0.95rem; color: #9ca3af; margin-bottom: 20px;">
+        <p id="stats-info" style="text-align: center; font-size: 0.95rem; color: #9ca3af; margin-bottom: 20px;">
             Распределен Стандартный набор (15, 14, 13, 12, 10, 8) + Бонусы Расы.<br>
-            <span style="font-size: 0.8rem;">Максимальные значения автоматически уходят в главные характеристики класса!</span>
+            <span style="font-size: 0.8rem;">Максимальные значения уходят в главные характеристики класса. <strong>Вы можете отредактировать их вручную!</strong></span>
         </p>
         <div id="stats-grid" class="stats-grid"></div>
         <div class="actions">
-            <button onclick="generateStats(false)" class="btn-secondary">Бросить кубики</button>
-            <button onclick="generateStats(true)" class="btn-secondary">Стандартный набор</button>
+            <button type="button" onclick="generateStats('roll')" class="btn-secondary">Бросить кубики</button>
+            <button type="button" onclick="generateStats('standard')" class="btn-secondary">Стандартный набор</button>
             <br><br>
-            <button onclick="nextScreen('screen-background')">Далее</button>
+            <button type="button" onclick="nextScreen('screen-background')">Далее</button>
         </div>
     </section>
 
@@ -140,40 +140,43 @@
                     <div class="hp-box framed-box">
                         <div class="hp-max-row"><span class="muted-text">Максимум ПЗ</span><input type="number" id="sheet-maxhp" oninput="updateChar('maxHp', this.value)"></div>
                         <div class="hp-current-container">
-                            <button class="hp-btn hp-minus" onclick="changeHP(-1)">-</button>
+                            <button type="button" class="hp-btn hp-minus" onclick="changeHP(-1)">-</button>
                             <input type="number" class="hp-current" id="sheet-hp" oninput="updateChar('hp', this.value)">
-                            <button class="hp-btn hp-plus" onclick="changeHP(1)">+</button>
+                            <button type="button" class="hp-btn hp-plus" onclick="changeHP(1)">+</button>
                         </div>
                         <label class="bottom-label">ТЕКУЩИЕ ХИТЫ</label>
                     </div>
 
-                    <div class="attacks-box framed-box">
-                        <textarea id="sheet-attacks" oninput="updateChar('attacks', this.value)" placeholder="Название     | Бонус | Урон"></textarea>
-                        <label class="bottom-label">АТАКИ И ЗАКЛИНАНИЯ (Быстрый доступ)</label>
+                    <div class="attacks-box framed-box flex-col">
+                        <div class="scrollable-canvas">
+                            <div id="auto-attacks-list" style="margin-bottom: 8px;"></div>
+                            <textarea id="sheet-attacks" oninput="updateChar('attacks', this.value); autoResizeTextarea(this)" placeholder="Прочие заклинания и навыки..." style="min-height: 100px;"></textarea>
+                        </div>
+                        <label class="bottom-label">АТАКИ И ЗАКЛИНАНИЯ</label>
                     </div>
                 </div>
             </div>
 
             <div class="panel-buttons">
-                <button class="btn-panel" onclick="openModal('modal-skills')">⚔️ Навыки и Испытания</button>
-                <button class="btn-panel" onclick="openModal('modal-prof')">📜 Прочие владения и языки</button>
-                <button class="btn-panel" onclick="openModal('modal-equipment')">🎒 Снаряжение и Монеты</button>
-                <button class="btn-panel" onclick="openModal('modal-features')">✨ Умения и Особенности</button>
+                <button type="button" class="btn-panel" onclick="openModal('modal-skills')">⚔️ Навыки и Испытания</button>
+                <button type="button" class="btn-panel" onclick="openModal('modal-prof')">📜 Прочие владения и языки</button>
+                <button type="button" class="btn-panel" onclick="openModal('modal-equipment')">🎒 Снаряжение и Монеты</button>
+                <button type="button" class="btn-panel" onclick="openModal('modal-features')">✨ Умения и Особенности</button>
             </div>
         </div>
 
         <div class="game-actions">
             <div id="xp-buttons-container" class="xp-btn-container btn-full-row"></div>
             
-            <button onclick="undo()" class="btn-secondary" title="Отменить последнее действие">🔙 Откат</button>
-            <button onclick="toggleTheme()" class="btn-secondary" id="theme-btn">🌙 Темная тема</button>
+            <button type="button" onclick="undo()" class="btn-secondary" title="Отменить последнее действие">🔙 Откат</button>
+            <button type="button" onclick="toggleTheme()" class="btn-secondary" id="theme-btn">🌙 Темная тема</button>
 
-            <button onclick="exportTXT()" class="btn-export">Экспорт</button>
-            <button onclick="document.getElementById('importFileSheet').click()" class="btn-secondary">Импорт</button>
+            <button type="button" onclick="exportTXT()" class="btn-export">Экспорт</button>
+            <button type="button" onclick="document.getElementById('importFileSheet').click()" class="btn-secondary">Импорт</button>
             <input type="file" id="importFileSheet" accept=".txt" class="hidden" onchange="importTXT(event)">
             
             <span class="game-actions-divider"></span>
-            <button onclick="nextScreen('screen-home')" class="btn-secondary btn-full-row">В меню</button>
+            <button type="button" onclick="nextScreen('screen-home')" class="btn-secondary btn-full-row btn-full-width no-scale">В меню</button>
         </div>
     </section>
     
@@ -181,13 +184,13 @@
         <div id="dice-menu" class="dice-menu hidden">
             <h4 class="dice-menu-title">Бросок</h4>
             <div class="dice-buttons">
-                <button onclick="rollDice(4)">d4</button><button onclick="rollDice(6)">d6</button>
-                <button onclick="rollDice(8)">d8</button><button onclick="rollDice(10)">d10</button>
-                <button onclick="rollDice(12)">d12</button><button onclick="rollDice(20)" class="d20-btn">d20</button>
+                <button type="button" onclick="rollDice(4)">d4</button><button type="button" onclick="rollDice(6)">d6</button>
+                <button type="button" onclick="rollDice(8)">d8</button><button type="button" onclick="rollDice(10)">d10</button>
+                <button type="button" onclick="rollDice(12)">d12</button><button type="button" onclick="rollDice(20)" class="d20-btn">d20</button>
             </div>
             <div id="dice-result" class="dice-result">-</div>
         </div>
-        <button class="dice-toggle" onclick="toggleDiceMenu()">🎲</button>
+        <button type="button" class="dice-toggle" onclick="toggleDiceMenu()">🎲</button>
     </div>
 </div>
 
@@ -201,7 +204,7 @@
 
 <div id="modal-skills" class="modal-backdrop hidden" onclick="closeOnBackdrop(event, 'modal-skills')">
     <div class="modal-content dnd-sheet flex-col">
-        <button class="modal-close" onclick="closeModal('modal-skills')">✖</button>
+        <button type="button" class="modal-close" onclick="closeModal('modal-skills')">✖</button>
         <h2 class="modal-title">Навыки и Испытания</h2>
         
         <div class="modal-content-flex mb-20">
@@ -249,27 +252,27 @@
                 <label class="bottom-label">НАВЫКИ</label>
             </div>
         </div>
-        <div class="modal-footer"><button class="btn-secondary" onclick="closeModal('modal-skills')">Закрыть</button></div>
+        <div class="modal-footer"><button type="button" class="btn-secondary" onclick="closeModal('modal-skills')">Закрыть</button></div>
     </div>
 </div>
 
 <div id="modal-prof" class="modal-backdrop hidden" onclick="closeOnBackdrop(event, 'modal-prof')">
     <div class="modal-content dnd-sheet flex-col h-60vh">
-        <button class="modal-close" onclick="closeModal('modal-prof')">✖</button>
+        <button type="button" class="modal-close" onclick="closeModal('modal-prof')">✖</button>
         <h2 class="modal-title">Прочие владения и языки</h2>
         <div class="framed-box flex-1">
             <textarea id="sheet-proficiencies" oninput="updateChar('proficiencies', this.value)" placeholder="Напишите здесь языки, которыми владеете, и инструменты..."></textarea>
         </div>
-        <div class="modal-footer"><button class="btn-secondary" onclick="closeModal('modal-prof')">Закрыть</button></div>
+        <div class="modal-footer"><button type="button" class="btn-secondary" onclick="closeModal('modal-prof')">Закрыть</button></div>
     </div>
 </div>
 
 <div id="modal-equipment" class="modal-backdrop hidden" onclick="closeOnBackdrop(event, 'modal-equipment')">
-    <div class="modal-content dnd-sheet flex-col h-70vh">
-        <button class="modal-close" onclick="closeModal('modal-equipment')">✖</button>
+    <div class="modal-content dnd-sheet flex-col h-80vh">
+        <button type="button" class="modal-close" onclick="closeModal('modal-equipment')">✖</button>
         <h2 class="modal-title">Снаряжение и Монеты</h2>
-        <div class="equipment-box framed-box flex-1">
-            <div class="equipment-container">
+        <div class="equipment-box framed-box flex-1 flex-col">
+            <div class="equipment-container flex-1">
                 <div class="money-col">
                     <div class="money-box"><label>ММ</label><input type="text" id="coin-cp" oninput="updateNested('money', 'cp', this.value)"></div>
                     <div class="money-box"><label>СМ</label><input type="text" id="coin-sp" oninput="updateNested('money', 'sp', this.value)"></div>
@@ -277,16 +280,39 @@
                     <div class="money-box"><label>ЗМ</label><input type="text" id="coin-gp" oninput="updateNested('money', 'gp', this.value)"></div>
                     <div class="money-box"><label>ПМ</label><input type="text" id="coin-pp" oninput="updateNested('money', 'pp', this.value)"></div>
                 </div>
-                <textarea id="sheet-equipment" oninput="updateChar('equipment', this.value)" placeholder="Ваш инвентарь..."></textarea>
+                <div class="inventory-main flex-1 flex-col">
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <h3 style="margin:0; font-size:1.1rem;">Рюкзак и Экипировка</h3>
+                        <button type="button" onclick="openInventoryDB()" class="btn-export" style="padding:5px 10px; font-size:0.85rem; margin:0;">+ предметы</button>
+                    </div>
+                    <div class="scrollable-canvas mt-10">
+                        <div id="inventory-list" class="inventory-list"></div>
+                        <textarea id="sheet-equipment" oninput="updateChar('equipment', this.value)" placeholder="Прочие пометки и кастомный лут..." style="margin-top:10px; min-height: 300px;"></textarea>
+                    </div>
+                </div>
             </div>
         </div>
-        <div class="modal-footer"><button class="btn-secondary" onclick="closeModal('modal-equipment')">Закрыть</button></div>
+        <div class="modal-footer"><button type="button" class="btn-secondary" onclick="closeModal('modal-equipment')">Закрыть</button></div>
+    </div>
+</div>
+
+<div id="modal-item-db" class="modal-backdrop hidden" style="z-index: 1050;">
+    <div class="modal-content dnd-sheet flex-col h-80vh" style="max-width: 600px;">
+        <button type="button" class="modal-close" onclick="closeModal('modal-item-db')">✖</button>
+        <h2 class="modal-title">База предметов</h2>
+        <div class="flex-row gap-10 mb-20" style="display:flex; justify-content:center; flex-wrap: wrap;">
+            <button type="button" class="btn-secondary" onclick="renderDBList('weapons')">⚔️ Оружие</button>
+            <button type="button" class="btn-secondary" onclick="renderDBList('armor')">🛡️ Броня</button>
+            <button type="button" class="btn-secondary" onclick="renderDBList('potions')">🧪 Зелья</button>
+            <button type="button" class="btn-secondary" onclick="renderDBList('gear')">🎒 Прочее</button>
+        </div>
+        <div id="db-list-container" class="flex-1 overflow-y-auto" style="border: 1px solid #ccc; padding: 10px; border-radius: 8px;"></div>
     </div>
 </div>
 
 <div id="modal-features" class="modal-backdrop hidden" onclick="closeOnBackdrop(event, 'modal-features')">
     <div class="modal-content dnd-sheet flex-col h-80vh">
-        <button class="modal-close" onclick="closeModal('modal-features')">✖</button>
+        <button type="button" class="modal-close" onclick="closeModal('modal-features')">✖</button>
         <h2 class="modal-title">Умения и Особенности</h2>
         <div class="personality-container personality-grid">
             <div class="traits-box framed-box"><textarea id="sheet-traits" oninput="updateChar('traits', this.value)"></textarea><label class="bottom-label">ЧЕРТЫ ХАРАКТЕРА</label></div>
@@ -294,24 +320,28 @@
             <div class="traits-box framed-box"><textarea id="sheet-bonds" oninput="updateChar('bonds', this.value)"></textarea><label class="bottom-label">ПРИВЯЗАННОСТИ</label></div>
             <div class="traits-box framed-box"><textarea id="sheet-flaws" oninput="updateChar('flaws', this.value)"></textarea><label class="bottom-label">ИЗЪЯНЫ</label></div>
         </div>
-        <div class="features-box framed-box flex-1">
+        <div class="features-box framed-box flex-1" style="display: flex; flex-direction: column; overflow: hidden; min-height: 250px;">
             <textarea id="sheet-features" oninput="updateChar('features', this.value)" placeholder="Опишите ваши расовые и классовые особенности..."></textarea>
         </div>
         
         <div id="class-info-buttons" class="panel-buttons" style="margin-top: 15px; grid-template-columns: 1fr 1fr; gap: 10px;"></div>
         
-        <div class="modal-footer"><button class="btn-secondary" onclick="closeModal('modal-features')">Закрыть</button></div>
+        <div class="modal-footer"><button type="button" class="btn-secondary" onclick="closeModal('modal-features')">Закрыть</button></div>
     </div>
 </div>
 
 <div id="modal-book-text" class="modal-backdrop hidden" onclick="closeOnBackdrop(event, 'modal-book-text')">
     <div class="modal-content dnd-sheet flex-col h-80vh">
-        <button class="modal-close" onclick="closeModal('modal-book-text')">✖</button>
-        <h2 id="book-title" class="modal-title" style="color: var(--gold);">Описание</h2>
+        <button type="button" class="modal-close" onclick="closeModal('modal-book-text')">✖</button>
+        <h2 id="book-title" class="modal-title">Описание</h2>
         <div id="book-content" style="white-space: pre-wrap; font-size: 0.95rem; line-height: 1.5; text-align: left; overflow-y: auto; flex: 1; padding-right: 10px;"></div>
     </div>
 </div>
 
+<script src="races/races.js"></script>
+<script src="classes/classes.js"></script>
+<script src="backgrounds/backgrounds.js"></script>
+<script src="inventory/items.js"></script>
 <script src="app.js"></script>
 </body>
 </html>

@@ -1,9 +1,9 @@
-:root {
+﻿:root {
     --bg-dark: #111827; --panel-bg: #1f2937; --text-main: #f3f4f6;
     --gold: #fbbf24; --gold-hover: #f59e0b; --danger: #ef4444;
 }
 
-body { margin: 0; background-color: var(--bg-dark); color: var(--text-main); font-family: 'Segoe UI', sans-serif; transition: background-color 0.3s; }
+body { margin: 0; background-color: var(--bg-dark); color: var(--text-main); font-family: 'Segoe UI', sans-serif; transition: background-color 0.3s; overflow-x: hidden; }
 .container { max-width: 1100px; margin: 0 auto; padding: 20px; }
 
 .screen { display: none; }
@@ -23,11 +23,18 @@ input[type="text"]:not(.dnd-sheet input), input[type="number"]:not(.dnd-sheet in
     background: var(--panel-bg); border: 1px solid #374151; color: white; border-radius: 8px; font-size: 16px; box-sizing: border-box;
 }
 
+#characterName, #sheet-name {
+    text-transform: capitalize;
+}
+
 button {
     background-color: var(--gold); color: var(--bg-dark); padding: 12px 24px; border: none;
     border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 16px; transition: 0.2s; margin: 5px;
 }
 button:hover { background-color: var(--gold-hover); transform: scale(1.05); }
+
+.no-scale:hover { transform: translateY(-2px) !important; }
+.btn-full-width { width: 100%; box-sizing: border-box; margin: 10px 0 !important; display: block; }
 
 .btn-secondary { background-color: #4b5563; color: white; }
 .btn-secondary:hover { background-color: #6b7280; }
@@ -56,8 +63,20 @@ button:hover { background-color: var(--gold-hover); transform: scale(1.05); }
 .modal-content-flex { display: flex; gap: 20px; }
 .skills-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .mb-20 { margin-bottom: 20px; }
-.flex-1 { flex: 1; }
+.mt-10 { margin-top: 10px; }
+
+/* Flex & Scroll Utilities */
+.flex-1 { flex: 1; min-height: 0; }
 .flex-2 { flex: 2; }
+.flex-col { display: flex; flex-direction: column; }
+.overflow-y-auto { overflow-y: auto; }
+
+/* Обертка для скролла инвентаря и атак единым полотном */
+.scrollable-canvas { 
+    flex: 1; overflow-y: auto; width: 100%; 
+    display: flex; flex-direction: column; padding-right: 5px; 
+}
+
 .bg-f0 { background: #f0f0f0; }
 .h-60vh { height: 60vh; }
 .h-70vh { height: 70vh; }
@@ -85,7 +104,20 @@ button:hover { background-color: var(--gold-hover); transform: scale(1.05); }
 .dnd-sheet input, .dnd-sheet textarea {
     border: none; background: transparent; font-family: 'Georgia', serif; color: #111; outline: none; width: 100%; box-sizing: border-box; transition: 0.3s;
 }
-.dnd-sheet textarea { resize: none; line-height: 1.4; font-size: 1rem; height: 100%; flex: 1; min-height: 150px; }
+.dnd-sheet textarea { resize: none; line-height: 1.4; font-size: 1rem; height: 100%; flex: 1; min-height: 60px; }
+
+#sheet-features {
+    resize: vertical !important; /* Разрешает растягивание текстового поля мышкой */
+    overflow-y: auto;
+    flex: 1;
+}
+
+#sheet-attacks {
+    flex: none;
+    height: auto;
+    overflow: hidden; /* Отключаем внутренний скролл */
+}
+
 .muted-text { font-size: 0.8rem; color: #666; font-family: sans-serif; transition: 0.3s; }
 
 .sheet-header { display: flex; gap: 30px; margin-bottom: 25px; align-items: flex-end; }
@@ -120,14 +152,14 @@ button:hover { background-color: var(--gold-hover); transform: scale(1.05); }
 
 .stat-box {
     border: 3px solid #d4d4d4; border-radius: 15px; text-align: center;
-    padding: 10px 5px 25px 5px; background: #f9f9f9; position: relative; transition: 0.3s;
+    padding: 10px 5px 35px 5px; background: #f9f9f9; position: relative; transition: 0.3s;
 }
 .stat-box label { display: block; font-size: 0.65rem; font-weight: bold; margin-bottom: 5px; color: #444; transition: 0.3s;}
-.stat-mod { font-size: 2rem; text-align: center; font-weight: bold; cursor: default;}
+.stat-mod { font-size: 2rem; text-align: center; font-weight: bold; cursor: default; height: 40px; padding: 0; margin-bottom: 5px; line-height: 1;}
 .stat-score-bubble {
-    position: absolute; bottom: -15px; left: 50%; transform: translateX(-50%);
+    position: absolute; bottom: -20px; left: 50%; transform: translateX(-50%);
     background: #fff; border: 2px solid #d4d4d4; border-radius: 50%; width: 40px; height: 40px;
-    display: flex; align-items: center; justify-content: center; transition: 0.3s;
+    display: flex; align-items: center; justify-content: center; transition: 0.3s; z-index: 2;
 }
 .stat-score-bubble input { text-align: center; font-size: 1.1rem; width: 100%; font-family: sans-serif; }
 
@@ -155,14 +187,14 @@ button:hover { background-color: var(--gold-hover); transform: scale(1.05); }
 .hp-btn.hp-minus:hover { background: var(--danger); color: white; border-color: var(--danger); }
 .hp-btn.hp-plus:hover { background: #10b981; color: white; border-color: #10b981; }
 
-.attacks-box { height: 200px; }
+.attacks-box { height: 260px; padding-bottom: 30px; }
 
 .panel-buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 40px; }
 .btn-panel { background: #f8f8f8; border: 2px solid #d4d4d4; color: #333; padding: 15px; font-size: 1.1rem; border-radius: 10px; font-weight: bold; cursor: pointer; transition: 0.3s;}
 .btn-panel:hover { background: #eee; border-color: var(--gold); transform: translateY(-3px); box-shadow: 0 5px 10px rgba(0,0,0,0.1); }
 
 /* =========================================
-   МОДАЛЬНЫЕ ОКНА (ВКЛАДКИ)
+   МОДАЛЬНЫЕ ОКНА И ИНВЕНТАРЬ
    ========================================= */
 .modal-backdrop {
     position: fixed; top: 0; left: 0; width: 100%; height: 100%;
@@ -171,11 +203,13 @@ button:hover { background-color: var(--gold-hover); transform: scale(1.05); }
 }
 .modal-content {
     background: #fff; width: 95%; max-width: 800px; max-height: 90vh;
-    overflow-y: auto; padding: 30px; position: relative; border-radius: 12px; box-sizing: border-box; transition: 0.3s;
+    padding: 30px; position: relative; border-radius: 12px; box-sizing: border-box; transition: 0.3s;
+    overflow-y: auto; 
 }
-.flex-col { display: flex; flex-direction: column; }
 .modal-title { margin-top: 0; color: #333; border-bottom: 2px solid #ccc; padding-bottom: 10px; margin-bottom: 20px; transition: 0.3s;}
 .modal-footer { margin-top: 20px; text-align: center; }
+
+#book-title { color: #000; }
 
 .modal-close {
     position: absolute; top: 15px; right: 15px; background: #eee; color: #333;
@@ -198,15 +232,16 @@ button:hover { background-color: var(--gold-hover); transform: scale(1.05); }
 .money-box label { display: block; font-size: 0.6rem; font-weight: bold; color: #666; margin-bottom: 2px; transition: 0.3s;}
 .money-box input { width: 100%; text-align: center; font-size: 0.9rem; border: none; background: transparent; padding: 0; }
 
+.inventory-list { 
+    border: 2px solid #ccc; padding: 5px; border-radius: 8px;
+    height: auto; 
+}
+
 .traits-box { height: 90px; padding: 10px; }
 
 .game-actions { 
-    text-align: center; 
-    margin: 30px auto 0 auto; 
-    padding-top: 20px; 
-    max-width: 900px; 
-    width: 100%; 
-    box-sizing: border-box; 
+    text-align: center; margin: 30px auto 0 auto; padding-top: 20px; 
+    max-width: 900px; width: 100%; box-sizing: border-box; 
 }
 
 .dice-container {
@@ -258,6 +293,7 @@ body.dark-mode-active { background-color: #0f172a; }
 .dark-sheet .list-row label { color: #cbd5e1 !important; }
 .dark-sheet .modal-content { background: #1e293b !important; color: #f8fafc !important; border: 1px solid #334155 !important; }
 .dark-sheet .modal-title { color: var(--gold) !important; border-bottom-color: #334155 !important; }
+.dark-sheet #book-title { color: #f8fafc !important; }
 .dark-sheet .modal-close { background: #334155 !important; color: #f8fafc !important; }
 .dark-sheet .modal-close:hover { background: var(--danger) !important; }
 .dark-sheet .money-box { background: #0f172a !important; border-color: #334155 !important; }
@@ -265,6 +301,9 @@ body.dark-mode-active { background-color: #0f172a; }
 .dark-sheet .hp-btn { background: #334155 !important; color: #f8fafc !important; border-color: #475569 !important; }
 .dark-sheet .hp-btn:hover { color: #fff !important; border-color: transparent !important; }
 .dark-sheet .init-box, .dark-sheet .speed-box { background: #0f172a !important; border-color: #334155 !important; }
+.dark-sheet .inventory-list { border-color: #334155 !important; }
+.dark-sheet #db-list-container { border-color: #334155 !important; }
+.dark-sheet .inv-item-row { background: #0f172a !important; border-color: #334155 !important; color: #f8fafc !important; }
 
 /* =========================================
    АДАПТАЦИЯ ДЛЯ МОБИЛЬНЫХ ТЕЛЕФОНОВ
@@ -292,7 +331,6 @@ body.dark-mode-active { background-color: #0f172a; }
     .framed-box { margin-bottom: 15px; }
     .panel-buttons { grid-template-columns: 1fr; gap: 10px; }
 
-    /* Обновленная адаптивная сетка кнопок управления */
     .game-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; align-items: center; }
     .game-actions button { width: 100%; margin: 0; font-size: 0.9rem; padding: 12px 0; }
     .game-actions .game-actions-divider { display: none; }
@@ -302,7 +340,7 @@ body.dark-mode-active { background-color: #0f172a; }
     .xp-btn-container { display: flex; gap: 5px; }
     .btn-xp { font-size: 0.85rem; padding: 10px 0; }
 
-    .modal-content { padding: 20px 15px; height: auto !important; }
+    .modal-content { padding: 20px 15px; height: auto !important; max-height: 90vh; overflow-y: auto; }
     .modal-content-flex { flex-direction: column !important; gap: 15px !important; }
     .skills-grid, .personality-grid { grid-template-columns: 1fr !important; }
 
@@ -311,21 +349,9 @@ body.dark-mode-active { background-color: #0f172a; }
     .money-box { flex: 1; border-radius: 8px; margin: 0 2px; }
 
     .features-box, .equipment-box, #modal-prof .framed-box {
-        min-height: 400px !important; flex-shrink: 0; 
+        min-height: 250px !important; flex-shrink: 0; height: auto;
     }
 }
 
-
-/* Исправление вылезающих полей: Черты, Идеалы, Привязанности, Изъяны */
-.traits-box textarea {
-    min-height: 0; /* Отключаем глобальные 150px минимальной высоты */
-    height: 100%;
-}
-
-/* Исправление поля инвентаря в мобильной версии */
-@media (max-width: 768px) {
-    .equipment-container textarea {
-        height: auto; /* Убираем жесткие 100%, чтобы textarea не выталкивалась за пределы контейнера */
-        min-height: 200px; /* Задаем комфортную минимальную высоту для телефона */
-    }
-}
+.traits-box textarea { min-height: 0; height: 100%; }
+@media (max-width: 768px) { .equipment-container textarea { height: auto; min-height: 150px; } }
