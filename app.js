@@ -307,7 +307,10 @@ function setBackground(bg) {
     saveGame(); updateAllUI(); nextScreen('screen-sheet');
 
     let casters = getBaseCasterClasses();
-    if (casters.length > 0) openModal('modal-initial-spells');
+    let isTrueCaster = casters.some(c => c !== "Раса");
+    if (isTrueCaster) {
+        openModal('modal-initial-spells');
+    }
 }
 
 function getDBItem(name) {

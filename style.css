@@ -331,7 +331,16 @@ body.dark-mode-active { background-color: #0f172a; }
     .framed-box { margin-bottom: 15px; }
     .panel-buttons { grid-template-columns: 1fr; gap: 10px; }
 
-    .game-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; align-items: center; }
+    .game-actions {
+        display: flex; /* Измените с grid на flex */
+        flex-direction: column; /* Вертикальное расположение для мобильных */
+        gap: 10px;
+    }
+    .game-actions > div:first-child button {
+        flex: 1; /* Кнопки делят место поровну */
+        padding: 12px 2px !important; /* Немного уменьшим отступы для текста */
+        font-size: 0.85rem !important; /* Уменьшим шрифт, чтобы текст влез */
+    }
     .game-actions button { width: 100%; margin: 0; font-size: 0.9rem; padding: 12px 0; }
     .game-actions .game-actions-divider { display: none; }
     .game-actions input[type="file"] { display: none; }
