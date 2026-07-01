@@ -107,7 +107,7 @@ button:hover { background-color: var(--gold-hover); transform: scale(1.05); }
 .dnd-sheet textarea { resize: none; line-height: 1.4; font-size: 1rem; height: 100%; flex: 1; min-height: 60px; }
 
 #sheet-features {
-    resize: vertical !important; /* Разрешает растягивание текстового поля мышкой */
+    resize: vertical !important;
     overflow-y: auto;
     flex: 1;
 }
@@ -115,7 +115,7 @@ button:hover { background-color: var(--gold-hover); transform: scale(1.05); }
 #sheet-attacks {
     flex: none;
     height: auto;
-    overflow: hidden; /* Отключаем внутренний скролл */
+    overflow: hidden;
 }
 
 .muted-text { font-size: 0.8rem; color: #666; font-family: sans-serif; transition: 0.3s; }
@@ -350,6 +350,37 @@ body.dark-mode-active { background-color: #0f172a; }
 
     .features-box, .equipment-box, #modal-prof .framed-box {
         min-height: 250px !important; flex-shrink: 0; height: auto;
+    }
+}
+
+/* Перестраиваем распределение статов при создании персонажа в один столбец */
+@media (max-width: 640px) {
+    #stats-grid.stats-grid {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        width: 100%;
+        max-width: 100% !important;
+        box-sizing: border-box;
+        padding: 0 10px;
+    }
+
+    #stats-grid .stat-row {
+        width: 100% !important;
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(156, 163, 175, 0.2);
+        border-radius: 8px;
+        margin-bottom: 4px;
+    }
+    
+    #stats-grid .stat-row span {
+        font-size: 1.1rem !important;
+    }
+
+    #stats-grid .stat-row input[type="number"] {
+        width: 75px !important;
+        height: 40px;
+        font-size: 1.2rem !important;
     }
 }
 
