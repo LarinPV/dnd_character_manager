@@ -355,3 +355,36 @@ body.dark-mode-active { background-color: #0f172a; }
 
 .traits-box textarea { min-height: 0; height: 100%; }
 @media (max-width: 768px) { .equipment-container textarea { height: auto; min-height: 150px; } }
+
+/* Исправление заголовков (Рюкзак и Экипировка, Заклинания) в светлой/темной теме */
+.dnd-sheet h1, .dnd-sheet h2, .dnd-sheet h3 { color: #222; }
+.dark-sheet h1, .dark-sheet h2, .dark-sheet h3 { color: #f8fafc !important; }
+
+/* Чекбокс Компетентности Плута */
+.exp-box { width: 14px !important; height: 14px !important; margin: 0 4px !important; cursor: pointer; accent-color: var(--gold); }
+
+/* Принудительное скругление для всех модальных окон и их внутренних элементов */
+.modal-content {
+    border-radius: 12px !important;
+}
+
+.modal-content .framed-box, 
+.modal-content .inventory-list, 
+.modal-content #db-list-container, 
+.modal-content #spellbook-list,
+.modal-content #spell-db-list-container {
+    border-radius: 12px !important;
+}
+
+/* Исправление углов для темной темы */
+.dark-sheet, 
+.dark-sheet .framed-box, 
+.dark-sheet .stat-box,
+.dark-sheet .modal-content {
+    border-radius: 12px !important;
+}
+
+/* Увеличиваем ширину сетки распределения характеристик, чтобы избежать наложений */
+#stats-grid.stats-grid {
+    max-width: 500px !important;
+}
