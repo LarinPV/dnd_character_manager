@@ -16,7 +16,8 @@
             <div class="main-actions">
                 <button type="button" onclick="nextScreen('screen-name')">Создать персонажа</button>
                 <button type="button" id="loadGameBtn" class="btn-secondary hidden" onclick="loadGame()">Продолжить игру</button>
-                <button type="button" onclick="document.getElementById('importFileMain').click()" class="btn-export">Импорт (TXT)</button>
+                <button type="button" id="exportGameBtn" class="btn-export hidden" onclick="exportTXT()">Экспорт (TXT)</button>
+                <button type="button" onclick="document.getElementById('importFileMain').click()" class="btn-secondary">Импорт (TXT)</button>
                 <input type="file" id="importFileMain" accept=".txt" class="hidden" onchange="importTXT(event)">
                 <button type="button" id="clearSaveBtn" class="btn-danger hidden" onclick="resetGame()">Очистить</button>
             </div>
@@ -112,7 +113,15 @@
                     <div class="info-field"><input type="text" placeholder="Имя игрока"><label>ИМЯ ИГРОКА</label></div>
                     <div class="info-field"><input type="text" id="sheet-race" oninput="updateChar('race', this.value)"><label>РАСА И ПОДРАСА</label></div>
                     <div class="info-field"><input type="text" placeholder="Мировоззрение"><label>МИРОВОЗЗРЕНИЕ</label></div>
-                    <div class="info-field"><input type="number" id="sheet-xp" oninput="updateChar('xp', Number(this.value))"><label>ОПЫТ</label></div>
+                    
+                    <div class="info-field" style="display: flex; align-items: center; border-bottom: none; padding-bottom: 0;">
+                        <div style="flex: 1; border-bottom: 1px solid #aaa; padding-bottom: 2px; position: relative;">
+                            <input type="number" id="sheet-xp" oninput="updateChar('xp', Number(this.value))">
+                            <label>ОПЫТ</label>
+                        </div>
+                        <button type="button" class="btn-secondary no-scale" style="padding: 2px 10px; margin-left: 5px; font-size: 1.2rem; background: #8b5cf6;" onclick="openModal('modal-xp')" title="Добавить опыт">+</button>
+                    </div>
+
                 </div>
             </div>
 
@@ -158,24 +167,24 @@
                 <button type="button" class="btn-panel" onclick="openModal('modal-prof')">📜 Прочие владения и языки</button>
                 <button type="button" class="btn-panel" onclick="openModal('modal-equipment')">🎒 Снаряжение и Монеты</button>
                 <button type="button" class="btn-panel" onclick="openModal('modal-features')">✨ Умения и Особенности</button>
-                <!-- Кнопка Книги заклинаний: растягивается на всю ширину панели и показывается только колдунам -->
                 <button type="button" class="btn-panel hidden" id="btn-spellbook" onclick="openSpellbook()" style="grid-column: 1 / -1;">📖 Книга заклинаний</button>
             </div>
         </div>
 
         <div class="game-actions">
-            <div id="xp-buttons-container" class="xp-btn-container btn-full-row"></div>
+            <!-- Кнопки отдыха: теперь они сжимаются корректно -->
+            <div style="display: flex; gap: 10px; width: 100%; margin-bottom: 15px; box-sizing: border-box;">
+                <button type="button" onclick="openShortRestModal()" class="btn-secondary" style="flex: 1; min-width: 0; margin: 0; background-color: #d97706; color: #fff; font-weight: bold; padding: 12px 5px; font-size: 0.95rem; white-space: nowrap;">☕ Короткий отдых</button>
+                <button type="button" onclick="longRest()" class="btn-secondary" style="flex: 1; min-width: 0; margin: 0; background-color: #2563eb; color: #fff; font-weight: bold; padding: 12px 5px; font-size: 0.95rem; white-space: nowrap;">⛺ Длинный отдых</button>
+            </div>
             
-            <!-- Группируем кнопки в сетку, чтобы они всегда были одинакового размера -->
-            <div style="grid-column: 1 / -1; display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; width: 100%; margin-bottom: 10px;">
+            <div style="grid-column: 1 / -1; display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; width: 100%; margin-bottom: 10px;">
                 <button type="button" onclick="undo()" class="btn-secondary" title="Отменить последнее действие" style="margin: 0;">🔙 Откат</button>
                 <button type="button" onclick="toggleTheme()" class="btn-secondary" id="theme-btn" style="margin: 0;">🌙 Темная тема</button>
-                <button type="button" onclick="exportTXT()" class="btn-secondary" style="margin: 0;">Экспорт</button>
-                <button type="button" onclick="document.getElementById('importFileSheet').click()" class="btn-secondary" style="margin: 0;">Импорт</button>
             </div>
-            <input type="file" id="importFileSheet" accept=".txt" class="hidden" onchange="importTXT(event)">
             
-            <button type="button" onclick="nextScreen('screen-home')" class="btn-secondary btn-full-row btn-full-width no-scale" style="margin-top: 5px;">В меню</button>
+            <!-- Кнопка 'В меню' теперь гарантированно занимает всю ширину -->
+            <button type="button" onclick="nextScreen('screen-home')" class="btn-secondary btn-full-width no-scale" style="margin-top: 5px; grid-column: 1 / -1; padding: 15px 0;">В меню</button>
         </div>
     </section>
     
@@ -194,6 +203,33 @@
 </div>
 
 <!-- Модалки -->
+<div id="modal-short-rest" class="modal-backdrop hidden" onclick="closeOnBackdrop(event, 'modal-short-rest')">
+    <div class="modal-content dnd-sheet flex-col" style="max-width: 400px; text-align: center;">
+        <button type="button" class="modal-close" onclick="closeModal('modal-short-rest')">✖</button>
+        <h2 class="modal-title">☕ Короткий отдых</h2>
+        <p style="font-size: 0.9rem; margin-bottom: 15px;">Бросьте кость хитов, чтобы восстановить здоровье (можете кидать несколько раз, если позволяет уровень).</p>
+        
+        <div style="display: flex; justify-content: center; gap: 10px; margin-bottom: 20px; align-items: center;">
+            <button type="button" id="btn-roll-hit-die" class="btn-secondary" style="background-color: #8b5cf6;" onclick="rollHitDie()">🎲 Бросить <span id="hit-die-label"></span></button>
+        </div>
+        
+        <div style="margin-bottom: 20px;">
+            <label style="display: block; font-weight: bold; font-size: 0.8rem; margin-bottom: 5px; color: #555;">ВОССТАНОВЛЕНО ПЗ (ИТОГО):</label>
+            <input type="number" id="short-rest-hp-input" value="0" style="width: 120px; text-align: center; font-size: 2rem; border: 2px solid #ccc; border-radius: 8px; padding: 5px; margin: 0 auto; display: block; font-weight: bold; background: transparent;">
+        </div>
+        
+        <button type="button" class="btn-secondary no-scale" style="width: 100%; padding: 15px; font-weight: bold; background: #d97706; margin: 0;" onclick="applyShortRest()">Завершить отдых</button>
+    </div>
+</div>
+
+<div id="modal-xp" class="modal-backdrop hidden" onclick="closeOnBackdrop(event, 'modal-xp')">
+    <div class="modal-content dnd-sheet flex-col" style="max-width: 350px; text-align: center;">
+        <button type="button" class="modal-close" onclick="closeModal('modal-xp')">✖</button>
+        <h2 class="modal-title">Получение Опыта</h2>
+        <div id="xp-buttons-container" class="flex-col gap-10 mt-10" style="display: grid; grid-template-columns: 1fr; gap: 10px;"></div>
+    </div>
+</div>
+
 <div id="modal-levelup" class="modal-backdrop hidden">
     <div class="modal-content dnd-sheet flex-col" style="max-width: 550px;">
         <h2 class="modal-title">Взят новый уровень!</h2>
@@ -266,7 +302,6 @@
     </div>
 </div>
 
-<!-- ВОЗВРАЩЕННОЕ МОДАЛЬНОЕ ОКНО "Прочие владения и языки" -->
 <div id="modal-prof" class="modal-backdrop hidden" onclick="closeOnBackdrop(event, 'modal-prof')">
     <div class="modal-content dnd-sheet flex-col h-60vh">
         <button type="button" class="modal-close" onclick="closeModal('modal-prof')">✖</button>
@@ -339,7 +374,6 @@
     </div>
 </div>
 
-<!-- Модалки Книги заклинаний -->
 <div id="modal-spellbook" class="modal-backdrop hidden" onclick="closeOnBackdrop(event, 'modal-spellbook')">
     <div class="modal-content dnd-sheet flex-col h-80vh" style="max-width: 800px; width: 95%; box-sizing: border-box; overflow-x: hidden;">
         <button type="button" class="modal-close" onclick="closeModal('modal-spellbook')">✖</button>
@@ -356,24 +390,8 @@
 <div id="modal-spell-db" class="modal-backdrop hidden" style="z-index: 1050;">
     <div class="modal-content dnd-sheet flex-col h-80vh" style="max-width: 800px; width: 95%; box-sizing: border-box; overflow-x: hidden;">
         <button type="button" class="modal-close" onclick="closeModal('modal-spell-db')">✖</button>
-        <h2 class="modal-title">База заклинаний</h2>
+        <h2 class="modal-title">База заклинаний (Для вашего класса)</h2>
         <div id="spell-db-list-container" class="flex-1 overflow-y-auto" style="border: 1px solid #ccc; padding: 10px; border-radius: 8px; box-sizing: border-box; overflow-x: hidden;"></div>
-    </div>
-</div>
-
-<div id="modal-spell-db" class="modal-backdrop hidden" style="z-index: 1050;">
-    <div class="modal-content dnd-sheet flex-col h-80vh" style="max-width: 800px; width: 95%;">
-        <button type="button" class="modal-close" onclick="closeModal('modal-spell-db')">✖</button>
-        <h2 class="modal-title">База заклинаний (Для вашего класса)</h2>
-        <div id="spell-db-list-container" class="flex-1 overflow-y-auto" style="border: 1px solid #ccc; padding: 10px; border-radius: 8px;"></div>
-    </div>
-</div>
-
-<div id="modal-spell-db" class="modal-backdrop hidden" style="z-index: 1050;">
-    <div class="modal-content dnd-sheet flex-col h-80vh" style="max-width: 600px;">
-        <button type="button" class="modal-close" onclick="closeModal('modal-spell-db')">✖</button>
-        <h2 class="modal-title">База заклинаний (Для вашего класса)</h2>
-        <div id="spell-db-list-container" class="flex-1 overflow-y-auto" style="border: 1px solid #ccc; padding: 10px; border-radius: 8px;"></div>
     </div>
 </div>
 

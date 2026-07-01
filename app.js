@@ -8,7 +8,7 @@
     skillsProf: { acr: false, ath: false, prc: false, sur: false, ani: false, inti: false, prf: false, his: false, slg: false, arc: false, med: false, dec: false, nat: false, ins: false, inv: false, rel: false, ste: false, per: false },
     expertiseProf: {}, 
     money: { cp: "", sp: "", ep: "", gp: "", pp: "" },
-    inventory: [], spells: [], usedSlots: {}, // Добавлено хранилище для использованных ячеек
+    inventory: [], spells: [], usedSlots: {},
     equipment: "", attacks: "", features: "", proficiencies: "",
     traits: "", ideals: "", bonds: "", flaws: ""
 };
@@ -31,7 +31,9 @@ window.onload = () => {
     if (saved) {
         document.getElementById("loadGameBtn").classList.remove("hidden");
         let clearBtn = document.getElementById("clearSaveBtn");
+        let exportBtn = document.getElementById("exportGameBtn");
         if(clearBtn) clearBtn.classList.remove("hidden");
+        if(exportBtn) exportBtn.classList.remove("hidden");
         
         character = JSON.parse(saved);
         if(!character.inventory) character.inventory = [];
@@ -164,7 +166,6 @@ function generateStats(mode = 'standard') {
 }
 
 function setBackground(bg) {
-    // ВАЖНО: Очищаем навыки и спасы в самом начале, ДО учета расы и класса
     character.savesProf = { str: false, dex: false, con: false, int: false, wis: false, cha: false };
     character.skillsProf = { acr: false, ath: false, prc: false, sur: false, ani: false, inti: false, prf: false, his: false, slg: false, arc: false, med: false, dec: false, nat: false, ins: false, inv: false, rel: false, ste: false, per: false };
     character.expertiseProf = {}; 
@@ -188,7 +189,6 @@ function setBackground(bg) {
         }
     }
 
-    // Добавляем владение навыками напрямую от предыстории (чекбоксы)
     if (bg === "Прислужник") { character.skillsProf.rel = true; character.skillsProf.ins = true; }
     else if (bg === "Шарлатан") { character.skillsProf.dec = true; character.skillsProf.slg = true; }
     else if (bg === "Преступник") { character.skillsProf.ste = true; character.skillsProf.dec = true; }
@@ -280,7 +280,6 @@ function setBackground(bg) {
     character.traits = getRandom(randomTraitsList); character.ideals = getRandom(randomIdealsList);
     character.bonds = getRandom(randomBondsList); character.flaws = getRandom(randomFlawsList);
 
-    // === АВТО-ДОБАВЛЕНИЕ РАСОВЫХ ЗАКЛИНАНИЙ ===
     let rName = character.race.toLowerCase();
     let subName = (character.subrace || "").toLowerCase();
 
@@ -291,24 +290,19 @@ function setBackground(bg) {
         }
     };
 
-    if (rName.includes("тифлинг")) {
-        findAndAddSpell("Чудотворство");
-    }
-    if (rName.includes("эльф") && subName.includes("высокий")) {
-        findAndAddSpell("Огненный снаряд");
-    }
-    if (rName.includes("гном") && subName.includes("лесной")) {
-        findAndAddSpell("Малая иллюзия");
-    }
-    // =========================================
+    if (rName.includes("тифлинг")) findAndAddSpell("Чудотворство");
+    if (rName.includes("эльф") && subName.includes("высокий")) findAndAddSpell("Огненный снаряд");
+    if (rName.includes("гном") && subName.includes("лесной")) findAndAddSpell("Малая иллюзия");
 
     updateCalculations();
     character.hp = character.maxHp; 
     
     let loadBtn = document.getElementById("loadGameBtn");
     let clearBtn = document.getElementById("clearSaveBtn");
+    let exportBtn = document.getElementById("exportGameBtn");
     if(loadBtn) loadBtn.classList.remove("hidden");
     if(clearBtn) clearBtn.classList.remove("hidden");
+    if(exportBtn) exportBtn.classList.remove("hidden");
 
     saveGame(); updateAllUI(); nextScreen('screen-sheet');
 
@@ -316,8 +310,6 @@ function setBackground(bg) {
     if (casters.length > 0) openModal('modal-initial-spells');
 }
 
-// === БАЗА И ИНВЕНТАРЬ ===
-// Замените вашу старую функцию getDBItem в app.js на эту:
 function getDBItem(name) {
     return (typeof itemsDBAll !== 'undefined' ? itemsDBAll.find(i => i.name === name) : null) || null;
 }
@@ -449,7 +441,6 @@ function getSpellLevelUpMessage(lvl) {
 
 function showLevelUpModal(oldLvl, newLvl, subclassOpts) {
     let newAbilities = [];
-    // Добавляем информацию о магии прямо в общий массив способностей
     let spellInfo = getSpellLevelUpMessage(newLvl);
     if (spellInfo) newAbilities.push(spellInfo);
 
@@ -505,9 +496,96 @@ function changeHP(amount) {
     if (current < 0) current = 0;
     if (current > max) current = max; 
     character.hp = current;
-    document.getElementById('sheet-hp').value = character.hp;
+    let hpInput = document.getElementById('sheet-hp');
+    if(hpInput) hpInput.value = character.hp;
     saveGame();
 }
+
+// ==== ФУНКЦИИ ОТДЫХА ====
+function longRest() {
+    if (!confirm("Совершить Длинный отдых?\nЭто восстановит все хиты и магические ячейки.")) return;
+    
+    character.hp = character.maxHp;
+    let hpInput = document.getElementById('sheet-hp');
+    if (hpInput) hpInput.value = character.hp;
+    
+    character.usedSlots = {}; 
+    
+    if (!document.getElementById('modal-spellbook').classList.contains('hidden')) {
+        renderSpellbookList();
+    }
+    
+    saveGame();
+    alert("⛺ Длинный отдых завершен! Хиты и магия полностью восстановлены.");
+}
+
+function getHitDie() {
+    let clsStr = (character.class || "").toLowerCase();
+    if (clsStr.includes("варвар")) return 12;
+    if (["воин", "паладин", "следопыт"].some(c => clsStr.includes(c))) return 10;
+    if (["волшебник", "чародей"].some(c => clsStr.includes(c))) return 6;
+    return 8; // жрец, бард, друид, монах, плут, колдун
+}
+
+function openShortRestModal() {
+    let hd = getHitDie();
+    let conMod = calculateModifierRaw(character.stats['constitution']);
+    let conStr = conMod >= 0 ? `+${conMod}` : `${conMod}`;
+    
+    document.getElementById('hit-die-label').innerText = `1d${hd} ${conStr}`;
+    document.getElementById('short-rest-hp-input').value = 0;
+    openModal('modal-short-rest');
+}
+
+function rollHitDie() {
+    let hd = getHitDie();
+    let conMod = calculateModifierRaw(character.stats['constitution']);
+    
+    let roll = Math.floor(Math.random() * hd) + 1;
+    let heal = roll + conMod;
+    if (heal < 0) heal = 0;
+    if (heal === 0 && roll > 0) heal = 1; // Минимум 1 ХП при любом положительном броске по правилам
+    
+    let input = document.getElementById('short-rest-hp-input');
+    let current = Number(input.value) || 0;
+    input.value = current + heal;
+
+    // Визуальный эффект
+    let btn = document.getElementById('btn-roll-hit-die');
+    let originalText = btn.innerHTML;
+    btn.innerHTML = `🎲 Выпало ${roll} (Итог: ${heal})!`;
+    btn.style.backgroundColor = "var(--gold)";
+    btn.style.color = "#000";
+    
+    setTimeout(() => {
+        btn.innerHTML = originalText;
+        btn.style.backgroundColor = "";
+        btn.style.color = "";
+    }, 1200);
+}
+
+function applyShortRest() {
+    let healAmount = Number(document.getElementById('short-rest-hp-input').value) || 0;
+    if (healAmount > 0) {
+        changeHP(healAmount);
+    }
+    
+    let cClasses = getBaseCasterClasses();
+    let warlockRestored = false;
+    
+    if (cClasses.includes("Колдун")) {
+        if(character.usedSlots) delete character.usedSlots['pact'];
+        warlockRestored = true;
+        if (!document.getElementById('modal-spellbook').classList.contains('hidden')) {
+            renderSpellbookList();
+        }
+    }
+    
+    saveGame();
+    closeModal('modal-short-rest');
+    alert(`☕ Короткий отдых завершен! Хиты обновлены.${warlockRestored ? " Ячейки Колдуна восстановлены!" : ""}`);
+}
+// ========================
 
 function calculateModifierRaw(score) {
     let num = Number(score);
@@ -519,7 +597,6 @@ function updateCalculations() {
     let pb = Math.floor((character.level - 1) / 4) + 2;
     document.getElementById('sheet-prof').value = "+" + pb;
 
-    // HP
     let conMod = calculateModifierRaw(character.stats['constitution']);
     let hpBase = 0, hpPerLevel = 0;
     
@@ -547,7 +624,6 @@ function updateCalculations() {
         if(document.getElementById('sheet-hp')) document.getElementById('sheet-hp').value = character.hp;
     }
 
-    // AC
     let dexMod = calculateModifierRaw(character.stats['dexterity']);
     let wisMod = calculateModifierRaw(character.stats['wisdom']);
     let conModActual = calculateModifierRaw(character.stats['constitution']);
@@ -570,7 +646,6 @@ function updateCalculations() {
     character.ac = ac;
     document.getElementById('sheet-ac').value = character.ac;
 
-    // Speed
     let baseSpeed = 30;
     if (["Дварф", "Полурослик", "Гном"].includes(character.race)) baseSpeed = 25;
     if (character.subrace === "Лесной эльф") baseSpeed = 35;
@@ -587,7 +662,6 @@ function updateCalculations() {
     character.speed = (baseSpeed + speedBonus).toString();
     if(document.getElementById('sheet-speed')) document.getElementById('sheet-speed').value = character.speed;
 
-    // Init
     let halfPb = Math.floor(pb / 2);
     let isBardJack = (clsStr.includes("бард") && character.level >= 2);
     let isChampionAthlete = (character.subclass === "Чемпион" && character.level >= 7);
@@ -598,7 +672,6 @@ function updateCalculations() {
     character.initiative = initMod >= 0 ? `+${initMod}` : `${initMod}`;
     document.getElementById('sheet-init').value = character.initiative;
 
-    // Attacks
     let autoAttacksHTML = "";
     let strMod = calculateModifierRaw(character.stats['strength']);
     
@@ -637,7 +710,6 @@ function updateCalculations() {
         </div>`;
     }
     
-    // Вставка ТОЛЬКО ЗАГОВОРОВ в Атаки (0 круг) без лишних заголовков
     if (character.spells && character.spells.length > 0) {
         let cantrips = character.spells.filter(s => s.level === 0);
         if (cantrips.length > 0) {
@@ -649,7 +721,6 @@ function updateCalculations() {
                 let dbSp = typeof spellsDB !== 'undefined' ? spellsDB.find(s => s.name === sp.name) : null;
                 let desc = dbSp ? dbSp.desc : "";
                 
-                // Подменяем модификаторы и для главного экрана
                 desc = desc.replace(/\+\s*мод\.?\s*магии/gi, modStr);
                 desc = desc.replace(/\+\s*мод\.?/gi, modStr);
 
@@ -661,7 +732,6 @@ function updateCalculations() {
     }
     document.getElementById("auto-attacks-list").innerHTML = autoAttacksHTML;
 
-    // Saves
     for (let sv in saveToStat) {
         let statName = saveToStat[sv];
         let mod = calculateModifierRaw(character.stats[statName]);
@@ -674,7 +744,6 @@ function updateCalculations() {
         if(elChk) elChk.checked = isProf;
     }
 
-    // Skills & Expertise
     let isRogue = clsStr.includes("плут");
     for (let sk in skillToStat) {
         let statName = skillToStat[sk];
@@ -702,7 +771,6 @@ function updateCalculations() {
     document.getElementById('sheet-pass-perc').value = 10 + wisModCalc + prcProf;
 }
 
-// === УМНОЕ РАСПОЗНАВАНИЕ КЛАССОВ ===
 function getBaseCasterClasses() {
     let classes = [];
     let cls = (character.class || "").toLowerCase();
@@ -719,20 +787,15 @@ function getBaseCasterClasses() {
     if (cls.includes("паладин")) classes.push("Паладин");
     if (cls.includes("следопыт")) classes.push("Следопыт");
 
-    // ДОБАВЛЕНО: Если класс не магический, но магия есть от расы/предыстории
     if (classes.length === 0) {
-        // Проверяем расы, дающие магию по PHB
         if (["эльф", "тифлинг", "драконорожденный", "гном"].some(r => race.includes(r))) {
             classes.push("Раса"); 
         }
-        // Если у вас есть кастомные предыстории с магией (например, из Равники или Стриксхейвена)
-        // if (["прислужник"].some(b => bg.includes(b))) { classes.push("Предыстория"); }
     }
 
     return classes;
 }
 
-// === РАСЧЕТ ХАРАКТЕРИСТИК ДЛЯ МАГИИ ===
 function getSpellcastingStat() {
     let cls = (character.class || "").toLowerCase();
     let sub = (character.subclass || "").toLowerCase();
@@ -741,7 +804,7 @@ function getSpellcastingStat() {
     if (cls.includes("жрец") || cls.includes("друид") || cls.includes("следопыт") || cls.includes("монах")) return "wisdom";
     if (cls.includes("бард") || cls.includes("паладин") || cls.includes("чародей") || cls.includes("колдун")) return "charisma";
     
-    return "intelligence"; // По умолчанию
+    return "intelligence"; 
 }
 
 function updateAllUI() {
@@ -784,10 +847,10 @@ function updateAllUI() {
         else if (character.level >= 5) { xp1 = 100; xp2 = 250; xp3 = 500; }
         else if (character.level >= 3) { xp1 = 50; xp2 = 100; xp3 = 250; }
         xpBtnDiv.innerHTML = `
-            <button type="button" onclick="addXP(${xp1})" class="btn-xp">+${xp1} ОП</button>
-            <button type="button" onclick="addXP(${xp2})" class="btn-xp">+${xp2} ОП</button>
-            <button type="button" onclick="addXP(${xp3})" class="btn-xp">+${xp3} ОП</button>
-            <button type="button" onclick="addOneLevel()" class="btn-xp" style="background-color: var(--gold); color: #000; font-weight: bold;">+1 Ур.</button>
+            <button type="button" onclick="addXP(${xp1}); closeModal('modal-xp')" class="btn-panel">+${xp1} ОП</button>
+            <button type="button" onclick="addXP(${xp2}); closeModal('modal-xp')" class="btn-panel">+${xp2} ОП</button>
+            <button type="button" onclick="addXP(${xp3}); closeModal('modal-xp')" class="btn-panel">+${xp3} ОП</button>
+            <button type="button" onclick="addOneLevel(); closeModal('modal-xp')" class="btn-panel" style="border-color: var(--gold); background: #fff8e7;">+1 Уровень</button>
         `;
     }
 
@@ -804,7 +867,6 @@ function updateAllUI() {
         if(isRogue) el.classList.remove('hidden'); else el.classList.add('hidden');
     });
 
-    // ПОКАЗ/СКРЫТИЕ КНОПКИ КНИГИ ЗАКЛИНАНИЙ
     let casterClasses = getBaseCasterClasses();
     let btnSpellbook = document.getElementById("btn-spellbook");
     if (btnSpellbook) {
@@ -821,7 +883,6 @@ function showBookDescription(type) {
     let content = "";
     document.getElementById("book-title").textContent = title;
     
-    // Очищаем название от лишнего мусора (цифр и скобок)
     let cleanTitle = title.replace(/\[.*?\]|\d+/g, '').trim();
 
     if (type === 'class') {
@@ -869,17 +930,15 @@ function updateStat(statName, value) {
     const idMap = { 'strength': 'str', 'dexterity': 'dex', 'constitution': 'con', 'intelligence': 'int', 'wisdom': 'wis', 'charisma': 'cha' };
     const shortName = idMap[statName];
     
-    // Обновляем значение инпута характеристики
     let el = document.getElementById(`sheet-${shortName}`);
     if (el) el.value = character.stats[statName];
     
-    // Сразу пересчитываем и обновляем видимый модификатор характеристики (например, +3 или -1)
     let mod = calculateModifierRaw(character.stats[statName]);
     let elMod = document.getElementById(`sheet-${shortName}-mod`);
     if (elMod) elMod.value = mod >= 0 ? `+${mod}` : mod;
     
     saveGame(); 
-    updateCalculations(); // Пересчитает навыки, спасы, инициативу и КД на основе нового модификатора
+    updateCalculations(); 
 }
 
 function rollDice(sides) {
@@ -914,7 +973,7 @@ function resetGame() {
     if(confirm("Вы уверены, что хотите удалить текущего персонажа? Убедитесь, что сделали экспорт (TXT)!")) {
         localStorage.removeItem("dnd_char");
         character = { name: "", race: "", subrace: "", class: "", subclass: "", background: "", level: 1, xp: 0, hp: 0, maxHp: 0, ac: "", initiative: "+0", speed: "30", proficiencyBonus: 2, inspiration: "", passivePerception: 10, stats: { strength: 10, dexterity: 10, constitution: 10, intelligence: 10, wisdom: 10, charisma: 10 }, savesProf: { str: false, dex: false, con: false, int: false, wis: false, cha: false }, skillsProf: { acr: false, ath: false, prc: false, sur: false, ani: false, inti: false, prf: false, his: false, slg: false, arc: false, med: false, dec: false, nat: false, ins: false, inv: false, rel: false, ste: false, per: false }, expertiseProf: {}, money: { cp: "", sp: "", ep: "", gp: "", pp: "" }, inventory: [], spells: [], usedSlots: {}, equipment: "", attacks: "", features: "", proficiencies: "", traits: "", ideals: "", bonds: "", flaws: "" };
-        historyStack = []; document.getElementById("loadGameBtn").classList.add("hidden"); document.getElementById("clearSaveBtn").classList.add("hidden");
+        historyStack = []; document.getElementById("loadGameBtn").classList.add("hidden"); document.getElementById("clearSaveBtn").classList.add("hidden"); document.getElementById("exportGameBtn").classList.add("hidden");
         alert("Персонаж успешно удален.");
     }
 }
@@ -941,7 +1000,9 @@ function importTXT(event) {
                 if(!character.inventory) character.inventory = [];
                 if(!character.spells) character.spells = [];
                 if(!character.usedSlots) character.usedSlots = {};
-                document.getElementById("loadGameBtn").classList.remove("hidden"); document.getElementById("clearSaveBtn").classList.remove("hidden");
+                document.getElementById("loadGameBtn").classList.remove("hidden"); 
+                document.getElementById("clearSaveBtn").classList.remove("hidden");
+                document.getElementById("exportGameBtn").classList.remove("hidden");
                 saveGame(); updateAllUI(); nextScreen('screen-sheet');
             } else alert("Неверный формат данных!");
         } catch (err) { alert("Ошибка чтения файла!"); }
@@ -987,6 +1048,24 @@ function getMaxSlots(charLvl, spellLvl) {
     if (type === "none") return 0;
     let lvl = Math.min(20, Math.max(1, charLvl));
 
+    if (type === "warlock") {
+        const pactSlots = [0, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 4, 4, 4, 4];
+        const pactLevel = [0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5];
+        
+        if (spellLvl > 0 && spellLvl <= pactLevel[lvl]) {
+            return pactSlots[lvl];
+        } else if (spellLvl > 5) {
+            const arcanum = {
+                6: [0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1],
+                7: [0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1],
+                8: [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1],
+                9: [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1]
+            };
+            return arcanum[spellLvl]?.[lvl] || 0;
+        }
+        return 0;
+    }
+
     const fullSlots = {
         1: [0, 2,3,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4], 2: [0, 0,0,2,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3],
         3: [0, 0,0,0,0,2,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3], 4: [0, 0,0,0,0,0,0,1,2,3,3,3,3,3,3,3,3,3,3,3,3],
@@ -1003,29 +1082,20 @@ function getMaxSlots(charLvl, spellLvl) {
         1: [0, 0,0,2,3,3,3,4,4,4,4,4,4,4,4,4,4,4,4,4,4], 2: [0, 0,0,0,0,0,0,2,2,2,3,3,3,3,3,3,3,3,3,3,3],
         3: [0, 0,0,0,0,0,0,0,0,0,0,0,0,2,2,2,3,3,3,3,3], 4: [0, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1]
     };
-    // Колдуны имеют одинаковые ячейки максимального уровня. Показываем их на соответствующей вкладке
-    const warlockSlots = {
-        1: [0, 1,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0], 2: [0, 0,0,2,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-        3: [0, 0,0,0,0,2,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0], 4: [0, 0,0,0,0,0,0,2,2,0,0,0,0,0,0,0,0,0,0,0,0],
-        5: [0, 0,0,0,0,0,0,0,0,2,2,3,3,3,3,3,3,4,4,4,4], 6: [0, 0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1],
-        7: [0, 0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1], 8: [0, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1],
-        9: [0, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1]
-    };
     
     if (type === "full") return fullSlots[spellLvl]?.[lvl] || 0;
     if (type === "half") return halfSlots[spellLvl]?.[lvl] || 0;
     if (type === "third") return thirdSlots[spellLvl]?.[lvl] || 0;
-    if (type === "warlock") return warlockSlots[spellLvl]?.[lvl] || 0;
     return 0;
 }
 
 function autoSelectSpells() {
     const defaults = {
-        "Волшебник": ["Огненный снаряд", "Малая иллюзия", "Свет", "Волшебная стрела", "Щит"], // Добавлен заговор «Свет»
+        "Волшебник": ["Огненный снаряд", "Малая иллюзия", "Свет", "Волшебная стрела", "Щит"], 
         "Жрец": ["Священное пламя", "Указание", "Лечение ран", "Щит веры"],
         "Бард": ["Злая насмешка", "Малая иллюзия", "Лечение ран", "Слово исцеления"],
         "Друид": ["Друидическое искусство", "Указание", "Лечение ран", "Слово исцеления"],
-        "Чародей": ["Огненный снаряд", "Малая иллюзия", "Дружба", "Шоковое прикосновение", "Волшебная стрела", "Щит"], // Добавлены «Дружба» и «Шоковое прикосновение»
+        "Чародей": ["Огненный снаряд", "Малая иллюзия", "Дружба", "Шоковое прикосновение", "Волшебная стрела", "Щит"], 
         "Колдун": ["Мистический заряд", "Малая иллюзия", "Сглаз"],
         "Паладин": ["Щит веры", "Лечение ран"],
         "Следопыт": ["Метка охотника", "Лечение ран"]
@@ -1062,7 +1132,6 @@ function renderSpellTabs() {
 
 function selectSpellTab(level) {
     currentSpellLevel = level;
-    // Оставляем только заголовок, без кнопки
     document.getElementById('spell-tab-title').innerText = level === 0 ? "Заговоры (0 круг)" : `${level} Круг`;
     renderSpellTabs(); 
     renderSpellbookList();
@@ -1073,7 +1142,6 @@ function renderSpellbookList() {
     if(!character.spells) character.spells = [];
     if(!character.usedSlots) character.usedSlots = {};
     
-    // Считаем бонусы магии
     let stat = getSpellcastingStat();
     let statMod = calculateModifierRaw(character.stats[stat]);
     let pb = Math.floor((character.level - 1) / 4) + 2;
@@ -1084,8 +1152,6 @@ function renderSpellbookList() {
     let atkStr = spellAttack >= 0 ? `+${spellAttack}` : `${spellAttack}`;
 
     let slotsHTML = "";
-    
-    // Добавляем красивую панель с бонусом попадания и спасом
     let casterClasses = getBaseCasterClasses();
     if (casterClasses.length > 0) {
         slotsHTML += `<div style="background: #374151; color: white; padding: 10px; border-radius: 8px; margin-bottom: 15px; display: flex; justify-content: space-around; text-align: center; font-size: 0.95rem;">
@@ -1094,21 +1160,24 @@ function renderSpellbookList() {
         </div>`;
     }
 
+    let slotKey = currentSpellLevel;
+    if (casterClasses.includes("Колдун") && currentSpellLevel >= 1 && currentSpellLevel <= 5) {
+        slotKey = 'pact';
+    }
+
     let maxSlots = getMaxSlots(character.level, currentSpellLevel);
     
     if (maxSlots > 0) {
-        let used = character.usedSlots[currentSpellLevel] || 0;
+        let used = character.usedSlots[slotKey] || 0;
         slotsHTML += `<div style="margin-bottom: 15px; padding: 10px; background: #f0f0f0; border-radius: 8px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
             <div style="display: flex; align-items: center; flex-wrap: wrap; gap: 10px;">
                 <strong style="color: #333;">Доступно ячеек:</strong>
                 <div id="spell-slots-container" style="display: inline-flex; gap: 5px; flex-wrap: wrap;">`;
         for (let i = 0; i < maxSlots; i++) {
             let isChecked = i < (maxSlots - used) ? "checked" : "";
-            slotsHTML += `<input type="checkbox" style="width: 20px; height: 20px; cursor: pointer; accent-color: #8b5cf6;" ${isChecked} onchange="toggleSpellSlot(${currentSpellLevel})">`;
+            slotsHTML += `<input type="checkbox" style="width: 20px; height: 20px; cursor: pointer; accent-color: #8b5cf6;" ${isChecked} onchange="toggleSpellSlot(${currentSpellLevel}, '${slotKey}')">`;
         }
         slotsHTML += `</div></div><span style="font-size: 0.7rem; color: #666;">Снимите галочку при касте</span></div>`;
-    } else if (currentSpellLevel > 0 && casterClasses.includes("Колдун")) {
-        slotsHTML += `<div style="margin-bottom: 15px; padding: 10px; background: #f0f0f0; border-radius: 8px; color: #666; font-size: 0.8rem; text-align:center;">У Колдунов ячейки всегда повышаются до максимального круга. Отметьте их там.</div>`;
     }
 
     let filtered = character.spells.filter(s => s.level === currentSpellLevel);
@@ -1116,7 +1185,6 @@ function renderSpellbookList() {
         let dbSp = typeof spellsDB !== 'undefined' ? spellsDB.find(s => s.name === sp.name) : null;
         let desc = dbSp ? dbSp.desc : "";
         
-        // Автоматически заменяем слова "+ мод. магии" в базе на реальное число!
         desc = desc.replace(/\+\s*мод\.?\s*магии/gi, modStr);
         desc = desc.replace(/\+\s*мод\.?/gi, modStr);
 
@@ -1132,7 +1200,7 @@ function renderSpellbookList() {
     container.innerHTML = slotsHTML + (html || "<p style='color:#888; text-align:center; padding-top:20px;'>В этом круге пока нет заклинаний</p>");
 }
 
-function toggleSpellSlot(level) {
+function toggleSpellSlot(level, slotKey) {
     if (!character.usedSlots) character.usedSlots = {};
     let container = document.getElementById('spell-slots-container');
     if(!container) return;
@@ -1142,16 +1210,8 @@ function toggleSpellSlot(level) {
     checkboxes.forEach(cb => { if(cb.checked) checkedCount++; });
     
     let maxSlots = getMaxSlots(character.level, level);
-    // Использованные = максимум минус те, на которых осталась галочка (доступные)
-    character.usedSlots[level] = maxSlots - checkedCount;
+    character.usedSlots[slotKey] = maxSlots - checkedCount;
     saveGame(false);
-}
-
-function restoreSpellSlots() {
-    if (!character.usedSlots) character.usedSlots = {};
-    character.usedSlots[currentSpellLevel] = 0;
-    saveGame(false);
-    renderSpellbookList();
 }
 
 function openSpellDB() {
@@ -1166,7 +1226,6 @@ function openSpellDB() {
         return;
     }
 
-    // Умная фильтрация с защитой от ошибок
     let spells = spellsDB.filter(s => {
         if (s.level !== currentSpellLevel) return false;
         if (!s.classes || !Array.isArray(s.classes)) return true; 
@@ -1180,13 +1239,10 @@ function openSpellDB() {
             }
         }
 
-        // ДОБАВЛЕНО: Проверка расовых заклинаний в базе, если у вас в spells.js у заклинания в classes написано "Раса" или "Все"
         if (!isClassMatch && cClasses.includes("Раса")) {
-            // Например, разрешаем заговоры для Эльфов (т.к. Высокий эльф получает 1 заговор волшебника)
             if (currentSpellLevel === 0 && character.race.toLowerCase().includes("эльф") && s.classes.map(c => c.toLowerCase()).includes("волшебник")) {
                 isClassMatch = true;
             }
-            // Сюда же можно прописать условия для Тифлингов (Чудотворство) и т.д.
         }
 
         return isClassMatch;
@@ -1212,7 +1268,6 @@ function addSpell(name, level) {
     renderSpellbookList(); 
     updateCalculations();
     
-    // Уведомление об успешном добавлении
     alert(`Добавлено: ${name}`);
 }
 
