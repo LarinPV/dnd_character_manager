@@ -1,4 +1,3 @@
-﻿// Этот файл собирает все подключенные массивы заклинаний в единую базу данных spellsDB
 const spellsDB = [].concat(
     typeof spellsPHB0 !== 'undefined' ? spellsPHB0 : [],
     typeof spellsPHB1 !== 'undefined' ? spellsPHB1 : [],

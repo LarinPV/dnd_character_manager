@@ -1,4 +1,4 @@
-﻿let character = {
+let character = {
     name: "", race: "", subrace: "", class: "", subclass: "", background: "",
     level: 1, xp: 0, hp: 0, maxHp: 0,
     ac: "", initiative: "+0", speed: "30",
@@ -154,7 +154,7 @@ function generateStats(mode = 'standard') {
                 <span style="font-weight: bold; font-size: 1rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding-right: 10px;">${labels[k]}</span>
                 <input type="number" 
                        value="${character.stats[k]}" 
-                       oninput="character.stats['${k}'] = this.value === '' ? '' : Number(this.value)" 
+                       oninput="updateStat('${k}', this.value)" 
                        style="width: 65px; text-align: center; font-size: 1.1rem; padding: 6px; border-radius: 6px; border: 1px solid #4b5563; background: var(--panel-bg); color: var(--gold); font-weight: bold; outline: none; font-family: sans-serif; margin: 0; flex-shrink: 0;">
             </div>`
         ).join("");
@@ -200,7 +200,7 @@ function setBackground(bg) {
     else if (bg === "Чужеземец") { character.skillsProf.ath = true; character.skillsProf.sur = true; }
     else if (bg === "Моряк") { character.skillsProf.ath = true; character.skillsProf.prc = true; }
     else if (bg === "Солдат") { character.skillsProf.ath = true; character.skillsProf.inti = true; }
-    else if (bg === "Беспризорник") { character.skillsProf.sle = true; character.skillsProf.ste = true; }
+    else if (bg === "Беспризорник") { character.skillsProf.slg = true; character.skillsProf.ste = true; }
     else if (bg === "Учёный") { character.skillsProf.arc = true; character.skillsProf.his = true; }
 
     let classFeatures = "", classProfs = "";
@@ -504,7 +504,6 @@ function changeHP(amount) {
     saveGame();
 }
 
-// ==== ФУНКЦИИ ОТДЫХА ====
 function longRest() {
     if (!confirm("Совершить Длинный отдых?\nЭто восстановит все хиты и магические ячейки.")) return;
     
@@ -527,7 +526,7 @@ function getHitDie() {
     if (clsStr.includes("варвар")) return 12;
     if (["воин", "паладин", "следопыт"].some(c => clsStr.includes(c))) return 10;
     if (["волшебник", "чародей"].some(c => clsStr.includes(c))) return 6;
-    return 8; // жрец, бард, друид, монах, плут, колдун
+    return 8;
 }
 
 function openShortRestModal() {
@@ -547,13 +546,12 @@ function rollHitDie() {
     let roll = Math.floor(Math.random() * hd) + 1;
     let heal = roll + conMod;
     if (heal < 0) heal = 0;
-    if (heal === 0 && roll > 0) heal = 1; // Минимум 1 ХП при любом положительном броске по правилам
+    if (heal === 0 && roll > 0) heal = 1;
     
     let input = document.getElementById('short-rest-hp-input');
     let current = Number(input.value) || 0;
     input.value = current + heal;
 
-    // Визуальный эффект
     let btn = document.getElementById('btn-roll-hit-die');
     let originalText = btn.innerHTML;
     btn.innerHTML = `🎲 Выпало ${roll} (Итог: ${heal})!`;
@@ -588,7 +586,6 @@ function applyShortRest() {
     closeModal('modal-short-rest');
     alert(`☕ Короткий отдых завершен! Хиты обновлены.${warlockRestored ? " Ячейки Колдуна восстановлены!" : ""}`);
 }
-// ========================
 
 function calculateModifierRaw(score) {
     let num = Number(score);
@@ -610,18 +607,21 @@ function updateCalculations() {
     else if (["волшебник", "чародей"].some(c => clsStr.includes(c))) { hpBase = 6; hpPerLevel = 4; }
 
     if (hpBase > 0) {
-        let newMaxHp = (hpBase + conMod) + (character.level - 1) * (hpPerLevel + conMod);
-        if (character.subclass === "Наследие Драконов" || (clsStr.includes("чародей") && character.level < 3 && character.features.includes("Наследие драконов"))) newMaxHp += character.level; 
-        if (character.subrace === "Холмовой дварф") newMaxHp += character.level; 
+        let newMaxHp;
+        if (character.isMaxHpManual && character.maxHp !== "" && character.maxHp !== undefined && character.maxHp !== null && Number(character.maxHp) > 0) {
+            newMaxHp = Number(character.maxHp);
+        } else {
+            newMaxHp = (hpBase + conMod) + (character.level - 1) * (hpPerLevel + conMod);
+            if (character.subclass === "Наследие Драконов" || (clsStr.includes("чародей") && character.level < 3 && character.features.includes("Наследие драконов"))) newMaxHp += character.level; 
+            if (character.subrace === "Холмовой дварф") newMaxHp += character.level; 
+            character.maxHp = newMaxHp;
+        }
         
-        let hpChanged = (character.maxHp !== newMaxHp);
-        let diff = newMaxHp - character.maxHp;
-        character.maxHp = newMaxHp;
         let hpInput = document.getElementById('sheet-maxhp');
         if(hpInput) hpInput.value = character.maxHp;
         
-        if (character.hp === 0) character.hp = character.maxHp; 
-        else if (hpChanged && diff > 0 && character.level > 1) character.hp += diff;
+        let hpVal = Number(character.hp) || 0;
+        if (hpVal === 0) character.hp = character.maxHp; 
         if (character.hp > character.maxHp) character.hp = character.maxHp;
         
         if(document.getElementById('sheet-hp')) document.getElementById('sheet-hp').value = character.hp;
@@ -642,7 +642,10 @@ function updateCalculations() {
         else ac = dbArmor.ac;
     } else {
         if (clsStr.includes("варвар")) ac = 10 + dexMod + conModActual;
-        else if (clsStr.includes("монах")) ac = 10 + dexMod + wisMod;
+        else if (clsStr.includes("монах")) {
+            if (equippedShieldItem) ac = 10 + dexMod; // Монах теряет защиту без доспехов при ношении щита
+            else ac = 10 + dexMod + wisMod;
+        }
         else if (clsStr.includes("чародей") && (character.subclass === "Наследие Драконов" || character.level < 3)) ac = 13 + dexMod;
     }
     if (equippedShieldItem) ac += 2;
@@ -654,13 +657,19 @@ function updateCalculations() {
     if (character.subrace === "Лесной эльф") baseSpeed = 35;
     
     let speedBonus = 0;
-    if (clsStr.includes("монах")) {
+    let hasArmor = !!dbArmor;
+    let hasShield = !!equippedShieldItem;
+    let hasHeavyArmor = dbArmor && dbArmor.type === "Тяжелый доспех";
+
+    if (clsStr.includes("монах") && !hasArmor && !hasShield) {
         if (character.level >= 18) speedBonus = 30;
         else if (character.level >= 14) speedBonus = 25;
         else if (character.level >= 10) speedBonus = 20;
         else if (character.level >= 6) speedBonus = 15;
         else if (character.level >= 2) speedBonus = 10;
-    } else if (clsStr.includes("варвар") && character.level >= 5) speedBonus = 10;
+    } else if (clsStr.includes("варвар") && character.level >= 5 && !hasHeavyArmor) {
+        speedBonus = 10;
+    }
 
     character.speed = (baseSpeed + speedBonus).toString();
     if(document.getElementById('sheet-speed')) document.getElementById('sheet-speed').value = character.speed;
@@ -722,7 +731,7 @@ function updateCalculations() {
 
             cantrips.sort((a,b) => a.name.localeCompare(b.name)).forEach(sp => {
                 let dbSp = typeof spellsDB !== 'undefined' ? spellsDB.find(s => s.name === sp.name) : null;
-                let desc = dbSp ? dbSp.desc : "";
+                let desc = dbSp && dbSp.desc ? dbSp.desc : "";
                 
                 desc = desc.replace(/\+\s*мод\.?\s*магии/gi, modStr);
                 desc = desc.replace(/\+\s*мод\.?/gi, modStr);
@@ -739,7 +748,7 @@ function updateCalculations() {
         let statName = saveToStat[sv];
         let mod = calculateModifierRaw(character.stats[statName]);
         let isProf = character.savesProf && character.savesProf[sv];
-        let bonus = isProf ? pb : (isChampionAthlete && ['strength', 'dexterity', 'constitution'].includes(statName) ? Math.ceil(pb / 2) : 0);
+        let bonus = isProf ? pb : 0;
         let total = mod + bonus;
         let elVal = document.getElementById(`sv-${sv}-val`);
         let elChk = document.getElementById(`sv-${sv}`);
@@ -787,8 +796,8 @@ function getBaseCasterClasses() {
     if (cls.includes("волшебник") || sub.includes("мистический рыцарь") || sub.includes("мистический ловкач")) classes.push("Волшебник");
     if (cls.includes("чародей")) classes.push("Чародей");
     if (cls.includes("колдун")) classes.push("Колдун");
-    if (cls.includes("паладин")) classes.push("Паладин");
-    if (cls.includes("следопыт")) classes.push("Следопыт");
+    if (cls.includes("паладин") && character.level >= 2) classes.push("Паладин");
+    if (cls.includes("следопыт") && character.level >= 2) classes.push("Следопыт");
 
     if (classes.length === 0) {
         if (["эльф", "тифлинг", "драконорожденный", "гном"].some(r => race.includes(r))) {
@@ -904,6 +913,18 @@ function showBookDescription(type) {
 function updateChar(key, value) {
     if (key === 'name') character[key] = value.charAt(0).toUpperCase() + value.slice(1);
     else if (key === 'xp') { character.xp = Number(value); checkLevelUp(); updateCalculations(); } 
+    else if (key === 'maxHp') {
+        if (value === "") {
+            character.isMaxHpManual = false;
+        } else {
+            character.isMaxHpManual = true;
+            character.maxHp = Number(value);
+        }
+        updateCalculations();
+    }
+    else if (key === 'hp') {
+        character.hp = value === "" ? "" : Number(value);
+    }
     else character[key] = value;
     saveGame();
 }
@@ -1015,17 +1036,17 @@ function importTXT(event) {
 
 function autoResizeTextarea(el) { el.style.height = 'auto'; el.style.height = el.scrollHeight + 'px'; }
 
-// === КНИГА ЗАКЛИНАНИЙ И ЯЧЕЙКИ ===
 let currentSpellLevel = 0;
 
 function getMaxSpellLevel() {
     let type = "none";
     let cClasses = getBaseCasterClasses();
+    let sub = (character.subclass || "").toLowerCase();
     
-    if (["Бард", "Жрец", "Друид", "Волшебник", "Чародей"].some(c => cClasses.includes(c))) type = "full";
+    if (sub.includes("мистический рыцарь") || sub.includes("мистический ловкач")) type = "third";
+    else if (["Бард", "Жрец", "Друид", "Волшебник", "Чародей"].some(c => cClasses.includes(c))) type = "full";
     else if (["Паладин", "Следопыт"].some(c => cClasses.includes(c))) type = "half";
     else if (cClasses.includes("Колдун")) type = "warlock";
-    else if (character.subclass && (character.subclass.includes("Мистический рыцарь") || character.subclass.includes("Мистический ловкач"))) type = "third";
     
     if (type === "none") return 0;
     
@@ -1042,11 +1063,12 @@ function getMaxSlots(charLvl, spellLvl) {
     if (spellLvl === 0) return 0;
     let type = "none";
     let cClasses = getBaseCasterClasses();
+    let sub = (character.subclass || "").toLowerCase();
     
-    if (["Бард", "Жрец", "Друид", "Волшебник", "Чародей"].some(c => cClasses.includes(c))) type = "full";
+    if (sub.includes("мистический рыцарь") || sub.includes("мистический ловкач")) type = "third";
+    else if (["Бард", "Жрец", "Друид", "Волшебник", "Чародей"].some(c => cClasses.includes(c))) type = "full";
     else if (["Паладин", "Следопыт"].some(c => cClasses.includes(c))) type = "half";
     else if (cClasses.includes("Колдун")) type = "warlock";
-    else if (character.subclass && (character.subclass.includes("Мистический рыцарь") || character.subclass.includes("Мистический ловкач"))) type = "third";
     
     if (type === "none") return 0;
     let lvl = Math.min(20, Math.max(1, charLvl));
@@ -1118,14 +1140,21 @@ function autoSelectSpells() {
     alert("Стартовые заклинания добавлены!");
 }
 
+function hasCantrips() {
+    let cClasses = getBaseCasterClasses();
+    return cClasses.some(c => ["Бард", "Жрец", "Друид", "Волшебник", "Чародей", "Колдун", "Раса"].includes(c));
+}
+
 function openSpellbook() {
-    renderSpellTabs(); selectSpellTab(0); openModal('modal-spellbook');
+    let startLvl = hasCantrips() ? 0 : 1;
+    renderSpellTabs(); selectSpellTab(startLvl); openModal('modal-spellbook');
 }
 
 function renderSpellTabs() {
     let maxLvl = getMaxSpellLevel();
     let tabsHTML = "";
-    for(let i = 0; i <= maxLvl; i++) {
+    let startLvl = hasCantrips() ? 0 : 1;
+    for(let i = startLvl; i <= maxLvl; i++) {
         let label = i === 0 ? "Заговоры" : `${i} Круг`;
         let activeClass = i === currentSpellLevel ? "background-color: var(--gold); color: #000;" : "";
         tabsHTML += `<button type="button" class="btn-secondary" style="${activeClass} padding: 8px 12px; margin: 0; white-space: nowrap;" onclick="selectSpellTab(${i})">${label}</button>`;
