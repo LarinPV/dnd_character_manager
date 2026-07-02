@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
@@ -142,14 +142,28 @@
                         <div class="framed-box speed-box"><input type="text" id="sheet-speed" oninput="updateChar('speed', this.value)" readonly><label class="bottom-label">СКОРОСТЬ</label></div>
                     </div>
 
-                    <div class="hp-box framed-box">
-                        <div class="hp-max-row"><span class="muted-text">Максимум ПЗ</span><input type="number" id="sheet-maxhp" oninput="updateChar('maxHp', this.value)"></div>
-                        <div class="hp-current-container">
-                            <button type="button" class="hp-btn hp-minus" onclick="changeHP(-1)">-</button>
-                            <input type="number" class="hp-current" id="sheet-hp" oninput="updateChar('hp', this.value)">
-                            <button type="button" class="hp-btn hp-plus" onclick="changeHP(1)">+</button>
+                    <div style="display: flex; gap: 15px; width: 100%; flex-wrap: wrap; margin-bottom: 5px;">
+                        <!-- КОСТИ ХИТОВ -->
+                        <div class="framed-box" style="flex: 2; min-width: 150px; margin: 0;">
+                            <div class="hp-max-row"><span class="muted-text">Всего костей</span><span id="sheet-max-hitdice" style="font-weight: bold; font-size: 1.1rem; line-height: 1.6;">1d8</span></div>
+                            <div class="hp-current-container">
+                                <button type="button" class="hp-btn hp-minus" onclick="changeHitDice(-1)" style="font-size: 1.2rem; width: 26px; height: 26px; margin: 0 5px;">-</button>
+                                <input type="number" class="hp-current" id="sheet-current-hitdice" oninput="updateChar('currentHitDice', Number(this.value))" style="font-size: 2.2rem; width: 50px;">
+                                <button type="button" class="hp-btn hp-plus" onclick="changeHitDice(1)" style="font-size: 1.2rem; width: 26px; height: 26px; margin: 0 5px;">+</button>
+                            </div>
+                            <label class="bottom-label">КОСТИ ХИТОВ</label>
                         </div>
-                        <label class="bottom-label">ТЕКУЩИЕ ХИТЫ</label>
+
+                        <!-- ТЕКУЩИЕ ХИТЫ -->
+                        <div class="hp-box framed-box" style="flex: 3; min-width: 200px; margin: 0;">
+                            <div class="hp-max-row"><span class="muted-text">Максимум ПЗ</span><input type="number" id="sheet-maxhp" oninput="updateChar('maxHp', this.value)"></div>
+                            <div class="hp-current-container">
+                                <button type="button" class="hp-btn hp-minus" onclick="changeHP(-1)">-</button>
+                                <input type="number" class="hp-current" id="sheet-hp" oninput="updateChar('hp', this.value)">
+                                <button type="button" class="hp-btn hp-plus" onclick="changeHP(1)">+</button>
+                            </div>
+                            <label class="bottom-label">ТЕКУЩИЕ ХИТЫ</label>
+                        </div>
                     </div>
 
                     <div class="attacks-box framed-box flex-col">
@@ -207,7 +221,10 @@
     <div class="modal-content dnd-sheet flex-col" style="max-width: 400px; text-align: center;">
         <button type="button" class="modal-close" onclick="closeModal('modal-short-rest')">✖</button>
         <h2 class="modal-title">☕ Короткий отдых</h2>
-        <p style="font-size: 0.9rem; margin-bottom: 15px;">Бросьте кость хитов, чтобы восстановить здоровье (можете кидать несколько раз, если позволяет уровень).</p>
+        <p style="font-size: 0.9rem; margin-bottom: 10px;">Бросьте кость хитов, чтобы восстановить здоровье (можете кидать несколько раз, если позволяет уровень).</p>
+        <div style="margin-bottom: 15px; font-weight: bold; font-size: 0.95rem; color: #333;" id="short-rest-hitdice-info">
+            Доступно костей: <span id="short-rest-current-hd" style="color: #8b5cf6;">0</span>/<span id="short-rest-max-hd">0</span>
+        </div>
         
         <div style="display: flex; justify-content: center; gap: 10px; margin-bottom: 20px; align-items: center;">
             <button type="button" id="btn-roll-hit-die" class="btn-secondary" style="background-color: #8b5cf6;" onclick="rollHitDie()">🎲 Бросить <span id="hit-die-label"></span></button>

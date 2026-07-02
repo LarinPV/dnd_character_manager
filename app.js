@@ -9,6 +9,7 @@ let character = {
     expertiseProf: {}, 
     money: { cp: "", sp: "", ep: "", gp: "", pp: "" },
     inventory: [], spells: [], usedSlots: {},
+    currentHitDice: 1,
     equipment: "", attacks: "", features: "", proficiencies: "",
     traits: "", ideals: "", bonds: "", flaws: ""
 };
@@ -39,6 +40,7 @@ window.onload = () => {
         if(!character.inventory) character.inventory = [];
         if(!character.spells) character.spells = [];
         if(!character.usedSlots) character.usedSlots = {};
+        migrateInventory();
         historyStack.push(JSON.stringify(character));
     }
     applyTheme(); 
@@ -82,6 +84,7 @@ function loadGame() {
     if(!character.inventory) character.inventory = [];
     if(!character.spells) character.spells = [];
     if(!character.usedSlots) character.usedSlots = {};
+    migrateInventory();
     updateAllUI();
     nextScreen('screen-sheet');
 }
@@ -206,7 +209,16 @@ function setBackground(bg) {
     let classFeatures = "", classProfs = "";
     character.hp = 0; character.maxHp = 0; 
     character.inventory = [];
-    const addGear = (name, eq=true) => { character.inventory.push({ id: Date.now()+Math.random(), name: name, equipped: eq }); };
+    const addGear = (name, eq=true) => {
+        if (isStackable(name)) {
+            let existing = character.inventory.find(i => i.name === name);
+            if (existing) {
+                existing.quantity = (existing.quantity || 1) + 1;
+                return;
+            }
+        }
+        character.inventory.push({ id: Date.now()+Math.random(), name: name, equipped: eq, quantity: 1 });
+    };
 
     if (character.class === "Варвар") {
         character.savesProf.str = true; character.savesProf.con = true; character.skillsProf.ath = true; character.skillsProf.sur = true;
@@ -335,10 +347,64 @@ function renderDBList(category) {
     container.innerHTML = html;
 }
 
+function isStackable(itemName) {
+    if (typeof itemsDB === 'undefined' || !itemsDB) return true;
+    let isWeapon = itemsDB.weapons && itemsDB.weapons.some(w => w.name === itemName);
+    let isArmor = itemsDB.armor && itemsDB.armor.some(a => a.name === itemName);
+    return !isWeapon && !isArmor;
+}
+
+function changeQuantity(id, delta) {
+    let item = character.inventory.find(i => i.id === id);
+    if (item) {
+        let currentQty = item.quantity || 1;
+        let newQty = currentQty + delta;
+        if (newQty <= 0) {
+            removeFromInventory(id);
+        } else {
+            item.quantity = newQty;
+            saveGame();
+            renderInventory();
+        }
+    }
+}
+
+function migrateInventory() {
+    if (!character.inventory) {
+        character.inventory = [];
+        return;
+    }
+    let newInventory = [];
+    character.inventory.forEach(item => {
+        if (!item.quantity) item.quantity = 1;
+        if (isStackable(item.name)) {
+            let existing = newInventory.find(i => i.name === item.name);
+            if (existing) {
+                existing.quantity += item.quantity;
+            } else {
+                newInventory.push(item);
+            }
+        } else {
+            newInventory.push(item);
+        }
+    });
+    character.inventory = newInventory;
+}
+
 function addToInventory(category, index) {
     if(!character.inventory) character.inventory = [];
     let item = itemsDB[category][index];
-    character.inventory.push({ id: Date.now() + Math.random(), name: item.name, equipped: false });
+    
+    if (isStackable(item.name)) {
+        let existing = character.inventory.find(i => i.name === item.name);
+        if (existing) {
+            existing.quantity = (existing.quantity || 1) + 1;
+            saveGame(); renderInventory(); alert(`Добавлено: ${item.name} (Количество: ${existing.quantity})`);
+            return;
+        }
+    }
+    
+    character.inventory.push({ id: Date.now() + Math.random(), name: item.name, equipped: false, quantity: 1 });
     saveGame(); renderInventory(); alert(`Добавлено: ${item.name}`);
 }
 
@@ -351,10 +417,28 @@ function renderInventory() {
         let dbItem = getDBItem(item.name);
         let isEquippable = dbItem && (itemsDB.weapons.includes(dbItem) || itemsDB.armor.includes(dbItem));
         let equipHTML = isEquippable ? `<input type="checkbox" style="margin-right: 10px; width:16px; height:16px; cursor:pointer;" onchange="toggleEquip(${item.id}, this.checked)" ${item.equipped ? 'checked' : ''}>` : `<span style="display:inline-block; width:26px;"></span>`;
+        
+        let qtyControls = '';
+        if (isStackable(item.name)) {
+            qtyControls = `
+                <div style="display: inline-flex; align-items: center; gap: 5px; margin-right: 15px; background: #eee; border-radius: 4px; padding: 2px 5px;">
+                    <button type="button" class="btn-secondary" style="padding: 0px 5px; margin: 0; font-size: 0.8rem; min-width: 18px; height: 18px; line-height: 18px; display: flex; align-items: center; justify-content: center; background: #ddd; border: none; border-radius: 2px;" onclick="changeQuantity(${item.id}, -1)">-</button>
+                    <span style="font-weight: bold; min-width: 15px; text-align: center; font-size: 0.85rem;">${item.quantity || 1}</span>
+                    <button type="button" class="btn-secondary" style="padding: 0px 5px; margin: 0; font-size: 0.8rem; min-width: 18px; height: 18px; line-height: 18px; display: flex; align-items: center; justify-content: center; background: #ddd; border: none; border-radius: 2px;" onclick="changeQuantity(${item.id}, 1)">+</button>
+                </div>
+            `;
+        }
             
         return `<div class="inv-item-row" style="display:flex; justify-content:space-between; align-items:center; padding: 8px; border-bottom: 1px solid #ddd; font-size: 0.95rem;">
-            <div style="flex:1; display:flex; align-items:center;">${equipHTML}<strong>${item.name}</strong></div>
-            <button class="btn-danger" style="padding: 3px 8px; margin:0; font-size: 0.8rem;" onclick="removeFromInventory(${item.id})">✖</button>
+            <div style="flex:1; display:flex; align-items:center;">
+                ${equipHTML}
+                <strong>${item.name}</strong>
+                ${(!isStackable(item.name) && item.quantity > 1) ? ` <span style="color: #666; font-size: 0.85rem;">(x${item.quantity})</span>` : ''}
+            </div>
+            <div style="display: flex; align-items: center;">
+                ${qtyControls}
+                <button class="btn-danger" style="padding: 3px 8px; margin:0; font-size: 0.8rem;" onclick="removeFromInventory(${item.id})">✖</button>
+            </div>
         </div>`;
     }).join('');
     container.innerHTML = html || "<p style='color:#888; text-align:center; margin-top:20px;'>Рюкзак пуст</p>";
@@ -484,6 +568,8 @@ function commitLevelUp(oldLvl, newLvl, chosenSubclass) {
     if (newAbilities.length > 0) character.features += `\n\n[Получено при повышении до ${newLvl} ур.]\n- ` + newAbilities.join("\n- ");
 
     character.level = newLvl; 
+    let levelDiff = newLvl - oldLvl;
+    character.currentHitDice = Math.min(character.level, (character.currentHitDice !== undefined ? character.currentHitDice : oldLvl) + levelDiff);
     let oldMax = character.maxHp;
     updateCalculations(); 
     let hpGain = character.maxHp - oldMax;
@@ -504,14 +590,37 @@ function changeHP(amount) {
     saveGame();
 }
 
+function changeHitDice(amount) {
+    let max = character.level || 1;
+    let current = character.currentHitDice !== undefined ? character.currentHitDice : max;
+    current += amount;
+    if (current < 0) current = 0;
+    if (current > max) current = max;
+    character.currentHitDice = current;
+    saveGame();
+    let curHdEl = document.getElementById('sheet-current-hitdice');
+    if (curHdEl) curHdEl.value = character.currentHitDice;
+}
+
 function longRest() {
-    if (!confirm("Совершить Длинный отдых?\nЭто восстановит все хиты и магические ячейки.")) return;
+    let maxHd = character.level || 1;
+    let regainAmount = Math.max(1, Math.floor(maxHd / 2));
+    if (!confirm(`Совершить Длинный отдых?\nЭто восстановит все хиты, магические ячейки и до ${regainAmount} костей хитов.`)) return;
     
     character.hp = character.maxHp;
     let hpInput = document.getElementById('sheet-hp');
     if (hpInput) hpInput.value = character.hp;
     
     character.usedSlots = {}; 
+    
+    // Regain hit dice
+    let currentHd = character.currentHitDice !== undefined ? character.currentHitDice : maxHd;
+    let newHd = Math.min(maxHd, currentHd + regainAmount);
+    let actuallyRegained = newHd - currentHd;
+    character.currentHitDice = newHd;
+    
+    let curHdEl = document.getElementById('sheet-current-hitdice');
+    if (curHdEl) curHdEl.value = character.currentHitDice;
     
     if (!document.getElementById('modal-spellbook').classList.contains('hidden')) {
         renderSpellbookList();
@@ -536,10 +645,56 @@ function openShortRestModal() {
     
     document.getElementById('hit-die-label').innerText = `1d${hd} ${conStr}`;
     document.getElementById('short-rest-hp-input').value = 0;
+    
+    // Set hit dice info in short rest modal
+    let max = character.level || 1;
+    if (character.currentHitDice === undefined || character.currentHitDice === null) {
+        character.currentHitDice = max;
+    }
+    document.getElementById('short-rest-current-hd').innerText = character.currentHitDice;
+    document.getElementById('short-rest-max-hd').innerText = max;
+    
+    // Disable or enable roll button depending on dice availability
+    let rollBtn = document.getElementById('btn-roll-hit-die');
+    if (character.currentHitDice <= 0) {
+        rollBtn.disabled = true;
+        rollBtn.style.opacity = 0.5;
+        rollBtn.style.cursor = 'not-allowed';
+    } else {
+        rollBtn.disabled = false;
+        rollBtn.style.opacity = 1;
+        rollBtn.style.cursor = 'pointer';
+    }
+    
     openModal('modal-short-rest');
 }
 
 function rollHitDie() {
+    if (character.currentHitDice === undefined || character.currentHitDice === null) {
+        character.currentHitDice = character.level || 1;
+    }
+    if (character.currentHitDice <= 0) {
+        alert("У вас нет доступных костей хитов для броска!");
+        return;
+    }
+    
+    // Decrement hit dice
+    character.currentHitDice--;
+    saveGame();
+    
+    // Update main sheet and modal UI
+    let max = character.level || 1;
+    let curHdEl = document.getElementById('sheet-current-hitdice');
+    if (curHdEl) curHdEl.value = character.currentHitDice;
+    document.getElementById('short-rest-current-hd').innerText = character.currentHitDice;
+    
+    let rollBtn = document.getElementById('btn-roll-hit-die');
+    if (character.currentHitDice <= 0) {
+        rollBtn.disabled = true;
+        rollBtn.style.opacity = 0.5;
+        rollBtn.style.cursor = 'not-allowed';
+    }
+    
     let hd = getHitDie();
     let conMod = calculateModifierRaw(character.stats['constitution']);
     
@@ -552,16 +707,17 @@ function rollHitDie() {
     let current = Number(input.value) || 0;
     input.value = current + heal;
 
-    let btn = document.getElementById('btn-roll-hit-die');
-    let originalText = btn.innerHTML;
-    btn.innerHTML = `🎲 Выпало ${roll} (Итог: ${heal})!`;
-    btn.style.backgroundColor = "var(--gold)";
-    btn.style.color = "#000";
+    let originalText = rollBtn.innerHTML;
+    rollBtn.innerHTML = `🎲 Выпало ${roll} (Итог: ${heal})!`;
+    rollBtn.style.backgroundColor = "var(--gold)";
+    rollBtn.style.color = "#000";
     
     setTimeout(() => {
-        btn.innerHTML = originalText;
-        btn.style.backgroundColor = "";
-        btn.style.color = "";
+        rollBtn.innerHTML = originalText;
+        if (character.currentHitDice > 0) {
+            rollBtn.style.backgroundColor = "";
+            rollBtn.style.color = "";
+        }
     }, 1200);
 }
 
@@ -781,6 +937,22 @@ function updateCalculations() {
     let wisModCalc = calculateModifierRaw(character.stats['wisdom']);
     let prcProf = (character.expertiseProf?.['prc'] && isRogue) ? (pb*2) : (character.skillsProf?.['prc'] ? pb : (isBardJack ? halfPb : 0));
     document.getElementById('sheet-pass-perc').value = 10 + wisModCalc + prcProf;
+
+    // Update Hit Dice UI
+    let maxHd = character.level || 1;
+    let hdType = getHitDie();
+    let maxHdEl = document.getElementById('sheet-max-hitdice');
+    if (maxHdEl) maxHdEl.innerText = `${maxHd}d${hdType}`;
+    
+    if (character.currentHitDice === undefined || character.currentHitDice === null) {
+        character.currentHitDice = maxHd;
+    }
+    if (character.currentHitDice > maxHd) {
+        character.currentHitDice = maxHd;
+    }
+    
+    let curHdEl = document.getElementById('sheet-current-hitdice');
+    if (curHdEl) curHdEl.value = character.currentHitDice;
 }
 
 function getBaseCasterClasses() {
@@ -925,6 +1097,15 @@ function updateChar(key, value) {
     else if (key === 'hp') {
         character.hp = value === "" ? "" : Number(value);
     }
+    else if (key === 'currentHitDice') {
+        let maxHd = character.level || 1;
+        let val = value === "" ? maxHd : Number(value);
+        if (val < 0) val = 0;
+        if (val > maxHd) val = maxHd;
+        character.currentHitDice = val;
+        let curHdEl = document.getElementById('sheet-current-hitdice');
+        if (curHdEl) curHdEl.value = val;
+    }
     else character[key] = value;
     saveGame();
 }
@@ -996,7 +1177,7 @@ function undo() {
 function resetGame() {
     if(confirm("Вы уверены, что хотите удалить текущего персонажа? Убедитесь, что сделали экспорт (TXT)!")) {
         localStorage.removeItem("dnd_char");
-        character = { name: "", race: "", subrace: "", class: "", subclass: "", background: "", level: 1, xp: 0, hp: 0, maxHp: 0, ac: "", initiative: "+0", speed: "30", proficiencyBonus: 2, inspiration: "", passivePerception: 10, stats: { strength: 10, dexterity: 10, constitution: 10, intelligence: 10, wisdom: 10, charisma: 10 }, savesProf: { str: false, dex: false, con: false, int: false, wis: false, cha: false }, skillsProf: { acr: false, ath: false, prc: false, sur: false, ani: false, inti: false, prf: false, his: false, slg: false, arc: false, med: false, dec: false, nat: false, ins: false, inv: false, rel: false, ste: false, per: false }, expertiseProf: {}, money: { cp: "", sp: "", ep: "", gp: "", pp: "" }, inventory: [], spells: [], usedSlots: {}, equipment: "", attacks: "", features: "", proficiencies: "", traits: "", ideals: "", bonds: "", flaws: "" };
+        character = { name: "", race: "", subrace: "", class: "", subclass: "", background: "", level: 1, xp: 0, hp: 0, maxHp: 0, ac: "", initiative: "+0", speed: "30", proficiencyBonus: 2, inspiration: "", passivePerception: 10, stats: { strength: 10, dexterity: 10, constitution: 10, intelligence: 10, wisdom: 10, charisma: 10 }, savesProf: { str: false, dex: false, con: false, int: false, wis: false, cha: false }, skillsProf: { acr: false, ath: false, prc: false, sur: false, ani: false, inti: false, prf: false, his: false, slg: false, arc: false, med: false, dec: false, nat: false, ins: false, inv: false, rel: false, ste: false, per: false }, expertiseProf: {}, money: { cp: "", sp: "", ep: "", gp: "", pp: "" }, inventory: [], spells: [], usedSlots: {}, currentHitDice: 1, equipment: "", attacks: "", features: "", proficiencies: "", traits: "", ideals: "", bonds: "", flaws: "" };
         historyStack = []; document.getElementById("loadGameBtn").classList.add("hidden"); document.getElementById("clearSaveBtn").classList.add("hidden"); document.getElementById("exportGameBtn").classList.add("hidden");
         alert("Персонаж успешно удален.");
     }
@@ -1024,6 +1205,7 @@ function importTXT(event) {
                 if(!character.inventory) character.inventory = [];
                 if(!character.spells) character.spells = [];
                 if(!character.usedSlots) character.usedSlots = {};
+                migrateInventory();
                 document.getElementById("loadGameBtn").classList.remove("hidden"); 
                 document.getElementById("clearSaveBtn").classList.remove("hidden");
                 document.getElementById("exportGameBtn").classList.remove("hidden");

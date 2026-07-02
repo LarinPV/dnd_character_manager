@@ -1,4 +1,4 @@
-﻿:root {
+:root {
     --bg-dark: #111827; --panel-bg: #1f2937; --text-main: #f3f4f6;
     --gold: #fbbf24; --gold-hover: #f59e0b; --danger: #ef4444;
 }
@@ -133,7 +133,7 @@ button:hover { background-color: var(--gold-hover); transform: scale(1.05); }
 .info-field input { font-size: 1rem; }
 .info-field label { display: block; font-size: 0.65rem; font-weight: bold; color: #555; margin-top: 2px; transition: 0.3s;}
 
-.compact-body { display: flex; gap: 30px; align-items: flex-start; justify-content: center;}
+.compact-body { display: flex; gap: 30px; align-items: stretch; justify-content: center;}
 .col-stats { width: 100px; display: flex; flex-direction: column; gap: 15px; }
 .col-center { flex: 1; display: flex; flex-direction: column; gap: 20px; max-width: 600px; width: 100%; }
 
@@ -187,7 +187,7 @@ button:hover { background-color: var(--gold-hover); transform: scale(1.05); }
 .hp-btn.hp-minus:hover { background: var(--danger); color: white; border-color: var(--danger); }
 .hp-btn.hp-plus:hover { background: #10b981; color: white; border-color: #10b981; }
 
-.attacks-box { height: 260px; padding-bottom: 30px; }
+.attacks-box { flex: 1; min-height: 300px; padding-bottom: 30px; }
 
 .panel-buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 40px; }
 .btn-panel { background: #f8f8f8; border: 2px solid #d4d4d4; color: #333; padding: 15px; font-size: 1.1rem; border-radius: 10px; font-weight: bold; cursor: pointer; transition: 0.3s;}
