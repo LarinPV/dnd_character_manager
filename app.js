@@ -1060,9 +1060,10 @@ function updateAllUI() {
     });
 
     let casterClasses = getBaseCasterClasses();
+    let hasActualCasterClass = casterClasses.some(c => c !== "Раса");
     let btnSpellbook = document.getElementById("btn-spellbook");
     if (btnSpellbook) {
-        if (casterClasses.length > 0) btnSpellbook.classList.remove("hidden");
+        if (hasActualCasterClass) btnSpellbook.classList.remove("hidden");
         else btnSpellbook.classList.add("hidden");
     }
 
