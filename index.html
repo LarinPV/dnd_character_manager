@@ -395,7 +395,12 @@
     <div class="modal-content dnd-sheet flex-col h-80vh" style="max-width: 800px; width: 95%; box-sizing: border-box; overflow-x: hidden;">
         <button type="button" class="modal-close" onclick="closeModal('modal-spellbook')">✖</button>
         <h2 class="modal-title">Книга заклинаний</h2>
-        <div id="spell-tabs" style="display:flex; flex-wrap:wrap; gap:5px; margin-bottom:15px;"></div>
+        <div style="display:flex; flex-wrap:wrap; gap:5px; margin-bottom:15px; align-items: center;">
+            <div id="spell-sets-btn-wrapper" style="display:inline-flex; align-items:center; margin-right: 10px;">
+                <button type="button" class="btn-secondary" style="padding: 8px 12px; margin: 0; height: 38px; display: flex; align-items: center; justify-content: center; font-size: 0.9rem;" onclick="openSpellSetsModal()">Сеты 📋</button>
+            </div>
+            <div id="spell-tabs" style="display:flex; flex-wrap:wrap; gap:5px;"></div>
+        </div>
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 10px; flex-wrap: wrap; gap: 10px;">
             <h3 id="spell-tab-title" style="margin:0; font-size:1.1rem; color:inherit;">Заговоры</h3>
             <button type="button" class="btn-secondary" onclick="openSpellDB()" style="padding:5px 10px; font-size:0.85rem; margin:0;">+ Заклинание</button>
@@ -409,6 +414,18 @@
         <button type="button" class="modal-close" onclick="closeModal('modal-spell-db')">✖</button>
         <h2 class="modal-title">База заклинаний (Для вашего класса)</h2>
         <div id="spell-db-list-container" class="flex-1 overflow-y-auto" style="border: 1px solid #ccc; padding: 10px; border-radius: 8px; box-sizing: border-box; overflow-x: hidden;"></div>
+    </div>
+</div>
+
+<div id="modal-spell-sets" class="modal-backdrop hidden" style="z-index: 1050;">
+    <div class="modal-content dnd-sheet flex-col h-80vh" style="max-width: 600px; width: 95%; box-sizing: border-box; overflow-x: hidden;">
+        <button type="button" class="modal-close" onclick="closeModal('modal-spell-sets')">✖</button>
+        <h2 class="modal-title">Наборы заклинаний</h2>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px; background: #f0f0f0; padding: 10px; border-radius: 8px;">
+            <input type="text" id="new-spell-set-name" placeholder="Имя нового сета..." style="flex-grow: 1; padding: 5px; border-radius: 4px; border: 1px solid #ccc; max-width: 300px;">
+            <button type="button" class="btn-secondary" onclick="saveSpellPreset()" style="padding:5px 10px; font-size:0.9rem; margin:0; white-space: nowrap;">Сохранить текущий сет</button>
+        </div>
+        <div id="spell-sets-list-container" class="flex-1 overflow-y-auto" style="border: 1px solid #ccc; padding: 10px; border-radius: 8px; box-sizing: border-box; overflow-x: hidden;"></div>
     </div>
 </div>
 

@@ -8,7 +8,7 @@ let character = {
     skillsProf: { acr: false, ath: false, prc: false, sur: false, ani: false, inti: false, prf: false, his: false, slg: false, arc: false, med: false, dec: false, nat: false, ins: false, inv: false, rel: false, ste: false, per: false },
     expertiseProf: {}, 
     money: { cp: "", sp: "", ep: "", gp: "", pp: "" },
-    inventory: [], spells: [], usedSlots: {},
+    inventory: [], spells: [], usedSlots: {}, spellSets: {},
     currentHitDice: 1,
     equipment: "", attacks: "", features: "", proficiencies: "",
     traits: "", ideals: "", bonds: "", flaws: ""
@@ -626,8 +626,16 @@ function longRest() {
         renderSpellbookList();
     }
     
+    let divinationMsg = "";
+    if (character.class === "Волшебник" && character.subclass === "Школа Прорицания" && character.level >= 2) {
+        let numDice = character.level >= 14 ? 3 : 2;
+        let rolls = [];
+        for (let i = 0; i < numDice; i++) rolls.push(Math.floor(Math.random() * 20) + 1);
+        divinationMsg = `\n\n🎲 Знамение (Школа Прорицания):\nВыпали кубики: ${rolls.join(', ')}. Вы можете заменить ими броски сегодня!`;
+    }
+
     saveGame();
-    alert("⛺ Длинный отдых завершен! Хиты и магия полностью восстановлены.");
+    alert("⛺ Длинный отдых завершен! Хиты и магия полностью восстановлены." + divinationMsg);
 }
 
 function getHitDie() {
@@ -1329,7 +1337,21 @@ function hasCantrips() {
 
 function openSpellbook() {
     let startLvl = hasCantrips() ? 0 : 1;
-    renderSpellTabs(); selectSpellTab(startLvl); openModal('modal-spellbook');
+    renderSpellTabs(); 
+    selectSpellTab(startLvl); 
+    
+    // Сеты доступны только для классов с подготовкой заклинаний
+    let preparingClasses = ["Жрец", "Друид", "Волшебник", "Паладин", "Изобретатель"];
+    let setsBtnWrapper = document.getElementById('spell-sets-btn-wrapper');
+    if (setsBtnWrapper) {
+        if (preparingClasses.includes(character.class)) {
+            setsBtnWrapper.style.display = 'inline-flex';
+        } else {
+            setsBtnWrapper.style.display = 'none';
+        }
+    }
+    
+    openModal('modal-spellbook');
 }
 
 function renderSpellTabs() {
@@ -1488,4 +1510,71 @@ function addSpell(name, level) {
 function removeSpell(id) {
     character.spells = character.spells.filter(s => s.id !== id);
     saveGame(); renderSpellbookList(); updateCalculations();
+}
+
+function openSpellSetsModal() {
+    let input = document.getElementById('new-spell-set-name');
+    if(input) input.value = '';
+    renderSpellPresets();
+    openModal('modal-spell-sets');
+}
+
+function renderSpellPresets() {
+    let container = document.getElementById('spell-sets-list-container');
+    if (!container) return;
+    
+    if (!character.spellSets || Object.keys(character.spellSets).length === 0) {
+        container.innerHTML = `<p style="text-align:center; color:#888; margin-top:20px;">У вас пока нет сохраненных наборов.</p>`;
+        return;
+    }
+    
+    let html = '';
+    for (let name in character.spellSets) {
+        let spellsCount = character.spellSets[name].length;
+        let safeName = name.replace(/'/g, "\\'");
+        html += `<div class="inv-item-row" style="display:flex; justify-content:space-between; align-items:center; padding:10px; border-bottom:1px solid #eee;">
+            <div style="flex-grow: 1;"><strong>${name}</strong><br><span style="font-size:0.8rem; color:#888;">Заклинаний: ${spellsCount}</span></div>
+            <div style="display:flex; gap: 5px;">
+                <button type="button" class="btn-secondary" style="padding: 5px 10px; margin:0; white-space: nowrap;" onclick="loadSpellPreset('${safeName}')">Выбрать</button>
+                <button type="button" class="btn-danger" style="padding: 5px 10px; margin:0;" onclick="deleteSpellPreset('${safeName}')">Удалить</button>
+            </div>
+        </div>`;
+    }
+    container.innerHTML = html;
+}
+
+function saveSpellPreset() {
+    let input = document.getElementById('new-spell-set-name');
+    let name = input ? input.value.trim() : "";
+    if (!name) return alert("Пожалуйста, введите имя для нового набора заклинаний.");
+    
+    if (!character.spellSets) character.spellSets = {};
+    if (character.spellSets[name] && !confirm(`Набор с именем "${name}" уже существует. Перезаписать?`)) return;
+    
+    character.spellSets[name] = JSON.parse(JSON.stringify(character.spells || []));
+    saveGame();
+    renderSpellPresets();
+    if(input) input.value = '';
+    alert(`Набор "${name}" сохранен!`);
+}
+
+function loadSpellPreset(name) {
+    if (!name || !character.spellSets || !character.spellSets[name]) return;
+    
+    character.spells = JSON.parse(JSON.stringify(character.spellSets[name]));
+    character.usedSlots = {}; 
+    saveGame();
+    renderSpellbookList();
+    updateCalculations();
+    closeModal('modal-spell-sets');
+}
+
+function deleteSpellPreset(name) {
+    if (!name || !character.spellSets || !character.spellSets[name]) return;
+    
+    if (confirm(`Вы точно хотите удалить набор "${name}"? Это действие необратимо.`)) {
+        delete character.spellSets[name];
+        saveGame();
+        renderSpellPresets();
+    }
 }
