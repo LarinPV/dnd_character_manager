@@ -69,7 +69,13 @@ function toggleTheme() {
 function nextScreen(id) {
     document.querySelector('.screen.active').classList.remove('active');
     document.getElementById(id).classList.add('active');
-    if(id === 'screen-sheet') document.getElementById('dice-container').classList.remove('hidden');
+    if(id === 'screen-sheet') {
+        document.getElementById('dice-container').classList.remove('hidden');
+        setTimeout(() => {
+            let el = document.getElementById('sheet-attacks');
+            if(el) autoResizeTextarea(el);
+        }, 50);
+    }
     else document.getElementById('dice-container').classList.add('hidden');
 }
 
@@ -499,11 +505,27 @@ function getSpellLevelUpMessage(lvl) {
     let cClasses = getBaseCasterClasses();
     if(cClasses.length === 0) return "";
     
+    let sub = (character.subclass || "").toLowerCase();
+    let isThirdCaster = sub.includes("мистический рыцарь") || sub.includes("мистический ловкач");
+
     let cls = cClasses[0]; 
     const full = ["Бард", "Жрец", "Друид", "Волшебник", "Чародей"];
     const half = ["Паладин", "Следопыт"];
     
-    if(full.includes(cls)) {
+    if (isThirdCaster && lvl >= 3) {
+        let maxLvl = 1;
+        if (lvl >= 19) maxLvl = 4;
+        else if (lvl >= 13) maxLvl = 3;
+        else if (lvl >= 7) maxLvl = 2;
+        
+        let msg = `Доступны заклинания до ${maxLvl} круга. Выберите 1 новое заклинание для изучения.`;
+        if(lvl === 3) msg = `Доступны заклинания до 1 круга. Выберите 3 заклинания для изучения и 2 заговора.`;
+        if([10].includes(lvl)) msg += " Вы получаете +1 новый заговор!";
+        if([4, 7, 8, 10, 11, 13, 14, 16, 19, 20].includes(lvl)) msg += " Вы можете заменить одно из известных заклинаний на другое.";
+        return `<p style="font-weight: bold;">Магия: ${msg}</p>`;
+    }
+    
+    if(full.includes(cls) && !isThirdCaster) {
         let max = Math.ceil(lvl / 2);
         let count = (cls === "Волшебник") ? 2 : 1;
         let msg = `Доступны заклинания до ${max} круга. Выберите ${count} новых заклинания для изучения. `;
@@ -999,8 +1021,20 @@ function getSpellcastingStat() {
     return "intelligence"; 
 }
 
+function adjustNameFontSize() {
+    const nameEl = document.getElementById('sheet-name');
+    if (!nameEl) return;
+    const len = nameEl.value.length;
+    if (len > 30) nameEl.style.fontSize = "1.0rem";
+    else if (len > 25) nameEl.style.fontSize = "1.2rem";
+    else if (len > 20) nameEl.style.fontSize = "1.4rem";
+    else if (len > 15) nameEl.style.fontSize = "1.8rem";
+    else nameEl.style.fontSize = "2.5rem";
+}
+
 function updateAllUI() {
     document.getElementById("sheet-name").value = character.name || "";
+    adjustNameFontSize();
     document.getElementById("sheet-race").value = (character.race || "") + (character.subrace ? ` (${character.subrace})` : "");
     document.getElementById("sheet-class").value = `${character.class || ""}${character.subclass ? ` [${character.subclass}]` : ""} ${character.level || 1}`;
     document.getElementById("sheet-bg").value = character.background || "";
@@ -1092,7 +1126,10 @@ function showBookDescription(type) {
 }
 
 function updateChar(key, value) {
-    if (key === 'name') character[key] = value.charAt(0).toUpperCase() + value.slice(1);
+    if (key === 'name') {
+        character[key] = value.charAt(0).toUpperCase() + value.slice(1);
+        adjustNameFontSize();
+    }
     else if (key === 'xp') { character.xp = Number(value); checkLevelUp(); updateCalculations(); } 
     else if (key === 'maxHp') {
         if (value === "") {
