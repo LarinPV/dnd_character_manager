@@ -11,7 +11,8 @@ let character = {
     inventory: [], spells: [], usedSlots: {}, spellSets: {},
     currentHitDice: 1,
     equipment: "", attacks: "", features: "", proficiencies: "",
-    traits: "", ideals: "", bonds: "", flaws: ""
+    traits: "", ideals: "", bonds: "", flaws: "",
+    playerName: "", alignment: ""
 };
 
 let historyStack = [];
@@ -1038,6 +1039,8 @@ function updateAllUI() {
     document.getElementById("sheet-race").value = (character.race || "") + (character.subrace ? ` (${character.subrace})` : "");
     document.getElementById("sheet-class").value = `${character.class || ""}${character.subclass ? ` [${character.subclass}]` : ""} ${character.level || 1}`;
     document.getElementById("sheet-bg").value = character.background || "";
+    document.getElementById("sheet-playername").value = character.playerName || "";
+    document.getElementById("sheet-alignment").value = character.alignment || "";
     document.getElementById("sheet-xp").value = character.xp || 0;
     
     document.getElementById("sheet-hp").value = character.hp || 0;
