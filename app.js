@@ -1,3 +1,5 @@
+var currentRacesData = {};
+var currentSubraceData = {};
 let character = {
     name: "", race: "", subrace: "", class: "", subclass: "", background: "",
     level: 1, xp: 0, hp: 0, maxHp: 0,
@@ -44,6 +46,8 @@ window.onload = () => {
         migrateInventory();
         historyStack.push(JSON.stringify(character));
     }
+    if (typeof character.useXGE === "undefined") character.useXGE = false;
+    mergeExpansions();
     applyTheme(); 
 };
 
@@ -94,6 +98,10 @@ function loadGame() {
     migrateInventory();
     updateAllUI();
     nextScreen('screen-sheet');
+    setTimeout(() => {
+        let textareas = document.querySelectorAll("textarea");
+        textareas.forEach(ta => { if (typeof autoResizeTextarea === "function") autoResizeTextarea(ta); });
+    }, 10);
 }
 
 function setName() {
@@ -106,9 +114,9 @@ function setName() {
 
 function setRace(race) { 
     character.race = race; character.subrace = "";
-    if (subraceData[race]) {
+    if (currentSubraceData[race]) {
         let container = document.getElementById('subrace-cards');
-        container.innerHTML = subraceData[race].map(sr => 
+        container.innerHTML = currentSubraceData[race].map(sr => 
             `<div class="card" onclick="setSubrace('${sr.name}')">
                 <h3>${sr.name}</h3><p style="font-size: 0.9rem;">${sr.desc}</p>
             </div>`
@@ -141,12 +149,12 @@ function generateStats(mode = 'standard') {
     let tempStats = {};
     for (let i = 0; i < 6; i++) tempStats[keysForAssignment[i]] = values[i];
     
-    let rData = racesData[character.race];
+    let rData = currentRacesData[character.race];
     if (rData && rData.stats) {
         for (let k in rData.stats) if (tempStats[k] !== undefined) tempStats[k] += rData.stats[k];
     }
-    if (character.subrace && subraceData[character.race]) {
-        let srData = subraceData[character.race].find(x => x.name === character.subrace);
+    if (character.subrace && currentSubraceData[character.race]) {
+        let srData = currentSubraceData[character.race].find(x => x.name === character.subrace);
         if (srData && srData.stats) {
             for (let k in srData.stats) if (tempStats[k] !== undefined) tempStats[k] += srData.stats[k];
         }
@@ -184,14 +192,14 @@ function setBackground(bg) {
 
     character.background = bg;
     
-    let rData = racesData[character.race] || {};
+    let rData = currentRacesData[character.race] || {};
     character.speed = (rData.speed || 30).toString();
     let raceFeatures = rData.features || "";
     let raceLangs = rData.langs || "";
     if (rData.skills) { for(let k in rData.skills) character.skillsProf[k] = true; }
     
-    if (character.subrace && subraceData[character.race]) {
-        let srData = subraceData[character.race].find(x => x.name === character.subrace);
+    if (character.subrace && currentSubraceData[character.race]) {
+        let srData = currentSubraceData[character.race].find(x => x.name === character.subrace);
         if (srData) {
             if (srData.speed) character.speed = srData.speed.toString();
             if (srData.features) raceFeatures += "\n" + srData.features;
@@ -324,6 +332,10 @@ function setBackground(bg) {
     if(exportBtn) exportBtn.classList.remove("hidden");
 
     saveGame(); updateAllUI(); nextScreen('screen-sheet');
+    setTimeout(() => {
+        let textareas = document.querySelectorAll("textarea");
+        textareas.forEach(ta => { if (typeof autoResizeTextarea === "function") autoResizeTextarea(ta); });
+    }, 10);
 
     let casters = getBaseCasterClasses();
     let isTrueCaster = casters.some(c => c !== "Раса");
@@ -1259,6 +1271,10 @@ function importTXT(event) {
                 document.getElementById("clearSaveBtn").classList.remove("hidden");
                 document.getElementById("exportGameBtn").classList.remove("hidden");
                 saveGame(); updateAllUI(); nextScreen('screen-sheet');
+    setTimeout(() => {
+        let textareas = document.querySelectorAll("textarea");
+        textareas.forEach(ta => { if (typeof autoResizeTextarea === "function") autoResizeTextarea(ta); });
+    }, 10);
             } else alert("Неверный формат данных!");
         } catch (err) { alert("Ошибка чтения файла!"); }
     };
@@ -1618,4 +1634,90 @@ function deleteSpellPreset(name) {
         saveGame();
         renderSpellPresets();
     }
+}
+function adjustNameFontSize() {
+    let nameEl = document.getElementById("char-name");
+    if (!nameEl) return;
+    let nameLen = nameEl.textContent.length;
+    if (nameLen > 30) nameEl.style.fontSize = "1.0rem";
+    else if (nameLen > 20) nameEl.style.fontSize = "1.2rem";
+    else if (nameLen > 15) nameEl.style.fontSize = "1.5rem";
+    else nameEl.style.fontSize = "1.8rem";
+}
+
+function toggleExpansion(key, isChecked) {
+    if (!character) character = {};
+    character[key] = isChecked;
+    saveGame();
+    mergeExpansions();
+    updateAllUI();
+}
+
+function renderRaces() {
+    let container = document.getElementById('race-cards-container');
+    if (!container) return;
+    let html = '';
+    for (let r in currentRacesData) {
+        let desc = currentRacesData[r].desc || "+2 к одному, +1 к другому (или +1 к трем)";
+        html += `<div class="card" onclick="setRace('${r}')"><h3>${r}</h3><p>${desc}</p></div>`;
+    }
+    container.innerHTML = html;
+}
+
+function mergeExpansions() {
+    subclassData = {
+        "Варвар": { lvl: 3, opts: ["Путь Берсерка", "Путь Тотемного воина"] },
+        "Бард": { lvl: 3, opts: ["Коллегия Знаний", "Коллегия Доблести"] },
+        "Воин": { lvl: 3, opts: ["Чемпион", "Мастер боевых искусств", "Мистический рыцарь"] },
+        "Волшебник": { lvl: 2, opts: ["Школа Эвокации", "Школа Преграждения", "Школа Иллюзии", "Школа Воплощения", "Школа Некромантии", "Школа Очарования", "Школа Превращения", "Школа Прорицания"] },
+        "Друид": { lvl: 2, opts: ["Круг Земли", "Круг Луны"] },
+        "Жрец": { lvl: 2, opts: ["Домен Жизни", "Домен Света", "Домен Бури", "Домен Знания", "Домен Природы", "Домен Обмана", "Домен Войны"] },
+        "Монах": { lvl: 3, opts: ["Путь Открытой Ладони", "Путь Тени", "Путь Четырех Стихий"] },
+        "Паладин": { lvl: 3, opts: ["Клятва Преданности", "Клятва Древних", "Клятва Мести"] },
+        "Следопыт": { lvl: 3, opts: ["Охотник", "Повелитель зверей"] },
+        "Плут": { lvl: 3, opts: ["Вор", "Убийца", "Мистический ловкач"] },
+        "Чародей": { lvl: 3, opts: ["Наследие Драконов", "Дикая Магия"] },
+        "Колдун": { lvl: 3, opts: ["Архифея", "Исчадие", "Великий Древний", "Договор Гримуара", "Договор Клинка", "Договор Цепи"] }
+    };
+
+    spellsDB = [].concat(typeof spellsPHB !== 'undefined' ? spellsPHB : []);
+    currentRacesData = Object.assign({}, typeof racesData !== 'undefined' ? racesData : {});
+    currentSubraceData = Object.assign({}, typeof subraceData !== 'undefined' ? subraceData : {});
+
+    const expansions = [
+        { key: 'useXGE', sub: typeof subclassData_XGE !== 'undefined' ? subclassData_XGE : null, arch: typeof archFeatures_XGE !== 'undefined' ? archFeatures_XGE : null, spells: typeof spellsXGE !== 'undefined' ? spellsXGE : null, races: typeof races_XGE !== 'undefined' ? races_XGE : null },
+        { key: 'useTCE', sub: typeof subclassData_TCE !== 'undefined' ? subclassData_TCE : null, arch: typeof archFeatures_TCE !== 'undefined' ? archFeatures_TCE : null, spells: typeof spellsTCE !== 'undefined' ? spellsTCE : null, races: typeof races_TCE !== 'undefined' ? races_TCE : null },
+        { key: 'useMPMM', sub: typeof subclassData_MPMM !== 'undefined' ? subclassData_MPMM : null, arch: typeof archFeatures_MPMM !== 'undefined' ? archFeatures_MPMM : null, spells: typeof spellsMPMM !== 'undefined' ? spellsMPMM : null, races: typeof races_MPMM !== 'undefined' ? races_MPMM : null },
+        { key: 'useFTD', sub: typeof subclassData_FTD !== 'undefined' ? subclassData_FTD : null, arch: typeof archFeatures_FTD !== 'undefined' ? archFeatures_FTD : null, spells: typeof spellsFTD !== 'undefined' ? spellsFTD : null, races: typeof races_FTD !== 'undefined' ? races_FTD : null },
+        { key: 'useERLW', sub: typeof subclassData_ERLW !== 'undefined' ? subclassData_ERLW : null, arch: typeof archFeatures_ERLW !== 'undefined' ? archFeatures_ERLW : null, spells: typeof spellsERLW !== 'undefined' ? spellsERLW : null, races: typeof races_ERLW !== 'undefined' ? races_ERLW : null },
+        { key: 'useEGW', sub: typeof subclassData_EGW !== 'undefined' ? subclassData_EGW : null, arch: typeof archFeatures_EGW !== 'undefined' ? archFeatures_EGW : null, spells: typeof spellsEGW !== 'undefined' ? spellsEGW : null, races: typeof races_EGW !== 'undefined' ? races_EGW : null }
+    ];
+
+    if (character) {
+        expansions.forEach(exp => {
+            if (character[exp.key]) {
+                if (exp.sub) {
+                    for (let cls in exp.sub) {
+                        if (subclassData[cls]) subclassData[cls].opts = subclassData[cls].opts.concat(exp.sub[cls]);
+                        else subclassData[cls] = { opts: exp.sub[cls] };
+                    }
+                }
+                if (exp.arch) {
+                    for (let arch in exp.arch) {
+                        archFeatures[arch] = exp.arch[arch];
+                    }
+                }
+                if (exp.spells) {
+                    spellsDB = spellsDB.concat(exp.spells);
+                }
+                if (exp.races) {
+                    for (let r in exp.races) {
+                        currentRacesData[r] = exp.races[r];
+                    }
+                }
+            }
+        });
+    }
+    
+    renderRaces();
 }

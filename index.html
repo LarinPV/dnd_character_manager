@@ -15,6 +15,7 @@
             <p>Создай и веди своего героя прямо в браузере</p>
             <div class="main-actions">
                 <button type="button" onclick="nextScreen('screen-name')">Создать персонажа</button>
+                <button type="button" onclick="nextScreen('screen-expansions')" class="btn-secondary">Дополнения</button>
                 <button type="button" id="loadGameBtn" class="btn-secondary hidden" onclick="loadGame()">Продолжить игру</button>
                 <button type="button" id="exportGameBtn" class="btn-export hidden" onclick="exportTXT()">Экспорт (TXT)</button>
                 <button type="button" onclick="document.getElementById('importFileMain').click()" class="btn-secondary">Импорт (TXT)</button>
@@ -24,26 +25,55 @@
         </div>
     </section>
 
+    <section class="screen" id="screen-expansions">
+        <h1>Дополнения</h1>
+        <h2>Включите или отключите дополнительные источники</h2>
+        
+        <div style="margin: 20px auto; max-width: 400px; text-align: left; background: var(--panel-bg); padding: 15px; border-radius: 8px;">
+            <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
+                <input type="checkbox" id="toggle-xge-main" onchange="toggleExpansion('useXGE', this.checked)" style="width: 20px; height: 20px; margin: 0; background: transparent; border: 2px solid var(--gold);">
+                <span style="font-size: 0.95rem;">Xanathar's Guide to Everything</span>
+            </label>
+            
+
+            <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; margin-top: 15px;">
+                <input type="checkbox" id="toggle-tce-main" onchange="toggleExpansion('useTCE', this.checked)" style="width: 20px; height: 20px; margin: 0; background: transparent; border: 2px solid var(--gold);">
+                <span style="font-size: 0.95rem;">Tasha's Cauldron of Everything</span>
+            </label>
+            <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; margin-top: 15px;">
+                <input type="checkbox" id="toggle-mpmm-main" onchange="toggleExpansion('useMPMM', this.checked)" style="width: 20px; height: 20px; margin: 0; background: transparent; border: 2px solid var(--gold);">
+                <span style="font-size: 0.95rem;">Monsters of the Multiverse</span>
+            </label>
+            <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; margin-top: 15px;">
+                <input type="checkbox" id="toggle-ftd-main" onchange="toggleExpansion('useFTD', this.checked)" style="width: 20px; height: 20px; margin: 0; background: transparent; border: 2px solid var(--gold);">
+                <span style="font-size: 0.95rem;">Fizban's Treasury of Dragons</span>
+            </label>
+            <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; margin-top: 15px;">
+                <input type="checkbox" id="toggle-erlw-main" onchange="toggleExpansion('useERLW', this.checked)" style="width: 20px; height: 20px; margin: 0; background: transparent; border: 2px solid var(--gold);">
+                <span style="font-size: 0.95rem;">Eberron: Rising from the Last War</span>
+            </label>
+            <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; margin-top: 15px;">
+                <input type="checkbox" id="toggle-egw-main" onchange="toggleExpansion('useEGW', this.checked)" style="width: 20px; height: 20px; margin: 0; background: transparent; border: 2px solid var(--gold);">
+                <span style="font-size: 0.95rem;">Explorer's Guide to Wildemount</span>
+            </label>
+        </div>
+
+        <button type="button" onclick="nextScreen('screen-home')" class="btn-secondary">Назад</button>
+    </section>
+
     <section class="screen" id="screen-name">
         <h1>Создание персонажа</h1>
         <h2>Как зовут вашего героя?</h2>
         <input type="text" id="characterName" placeholder="Введите имя...">
+        
+
+
         <button type="button" onclick="setName()">Далее</button>
     </section>
 
     <section class="screen" id="screen-race">
         <h2>Выберите расу</h2>
-        <div class="cards">
-            <div class="card" onclick="setRace('Человек')"><h3>Человек</h3><p>+1 ко всем статам.</p></div>
-            <div class="card" onclick="setRace('Эльф')"><h3>Эльф</h3><p>+2 Ловкость.</p></div>
-            <div class="card" onclick="setRace('Дварф')"><h3>Дварф</h3><p>+2 Телосложение.</p></div>
-            <div class="card" onclick="setRace('Полурослик')"><h3>Полурослик</h3><p>+2 Ловкость.</p></div>
-            <div class="card" onclick="setRace('Драконорожденный')"><h3>Драконорожденный</h3><p>+2 Сила, +1 Харизма.</p></div>
-            <div class="card" onclick="setRace('Гном')"><h3>Гном</h3><p>+2 Интеллект.</p></div>
-            <div class="card" onclick="setRace('Полуэльф')"><h3>Полуэльф</h3><p>+2 Харизма, +1 к двум другим.</p></div>
-            <div class="card" onclick="setRace('Полуорк')"><h3>Полуорк</h3><p>+2 Сила, +1 Телосложение.</p></div>
-            <div class="card" onclick="setRace('Тифлинг')"><h3>Тифлинг</h3><p>+2 Харизма, +1 Интеллект.</p></div>
-        </div>
+        <div class="cards" id="race-cards-container"></div>
     </section>
 
     <section class="screen" id="screen-subrace">
@@ -196,6 +226,8 @@
                 <button type="button" onclick="undo()" class="btn-secondary" title="Отменить последнее действие" style="margin: 0;">🔙 Откат</button>
                 <button type="button" onclick="toggleTheme()" class="btn-secondary" id="theme-btn" style="margin: 0;">🌙 Темная тема</button>
             </div>
+            
+
             
             <!-- Кнопка 'В меню' теперь гарантированно занимает всю ширину -->
             <button type="button" onclick="nextScreen('screen-home')" class="btn-secondary btn-full-width no-scale" style="margin-top: 5px; grid-column: 1 / -1; padding: 15px 0;">В меню</button>
@@ -438,24 +470,35 @@
 </div>
 
 <script src="races/races.js"></script>
+    <script src="races/races_XGE.js"></script>
+    <script src="races/races_TCE.js"></script>
+    <script src="races/races_MPMM.js"></script>
+    <script src="races/races_FTD.js"></script>
+    <script src="races/races_ERLW.js"></script>
+    <script src="races/races_EGW.js"></script>
 <script src="classes/classes.js"></script>
 <script src="backgrounds/backgrounds.js"></script>
-<script src="spells/spells_PHB_0.js"></script>
-<script src="spells/spells_PHB_1.js"></script>
-<script src="spells/spells_PHB_2.js"></script>
-<script src="spells/spells_PHB_3.js"></script>
-<script src="spells/spells_PHB_4.js"></script>
-<script src="spells/spells_PHB_5.js"></script>
-<script src="spells/spells_PHB_6.js"></script>
-<script src="spells/spells_PHB_7.js"></script>
-<script src="spells/spells_PHB_8.js"></script>
-<script src="spells/spells_PHB_9.js"></script>
+<script src="spells/spells_XGE.js"></script>
+<script src="classes/classes_XGE.js"></script>
+
+    <script src="spells/spells_TCE.js"></script>
+    <script src="classes/classes_TCE.js"></script>
+    <script src="spells/spells_MPMM.js"></script>
+    <script src="classes/classes_MPMM.js"></script>
+    <script src="spells/spells_FTD.js"></script>
+    <script src="classes/classes_FTD.js"></script>
+    <script src="spells/spells_ERLW.js"></script>
+    <script src="classes/classes_ERLW.js"></script>
+    <script src="spells/spells_EGW.js"></script>
+    <script src="classes/classes_EGW.js"></script>
+
 <script src="inventory/weapons.js"></script>
 <script src="inventory/armor.js"></script>
 <script src="inventory/potions.js"></script>
 <script src="inventory/gear.js"></script>
 <script src="inventory/items.js"></script>
-<script src="spells/spells.js"></script>
+<script src="spells/spells_PHB.js"></script>
+    <script src="spells/spells.js"></script>
 <script src="app.js"></script>
 </body>
 </html>
