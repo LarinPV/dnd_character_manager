@@ -1635,15 +1635,7 @@ function deleteSpellPreset(name) {
         renderSpellPresets();
     }
 }
-function adjustNameFontSize() {
-    let nameEl = document.getElementById("char-name");
-    if (!nameEl) return;
-    let nameLen = nameEl.textContent.length;
-    if (nameLen > 30) nameEl.style.fontSize = "1.0rem";
-    else if (nameLen > 20) nameEl.style.fontSize = "1.2rem";
-    else if (nameLen > 15) nameEl.style.fontSize = "1.5rem";
-    else nameEl.style.fontSize = "1.8rem";
-}
+
 
 function toggleExpansion(key, isChecked) {
     if (!character) character = {};
