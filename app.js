@@ -1,3 +1,27 @@
+
+function scaleCantripDesc(name, desc, level) {
+    if (level < 5 || !desc) return desc;
+    let mult = level >= 17 ? 4 : (level >= 11 ? 3 : 2);
+    const noScale = ["Указание", "Сопротивление", "Свет", "Чудотворство", "Друидизм", "Фокусы", "Послание", "Починка", "Волшебная рука", "Малая иллюзия", "Пляшущие огоньки", "Формирование воды", "Уход за умирающим", "Дубинка (Шиллела)"];
+    if (noScale.includes(name)) return desc;
+    
+    if (name === "Мистический заряд") {
+        let beamDesc = mult === 2 ? "2 луча" : (mult === 3 ? "3 луча" : "4 луча");
+        return `Атк. закл. 1d10 сила (${beamDesc}, каждый отдельная атака).`;
+    }
+    
+    if (name.includes("Громыхающий клинок") || name.includes("Громовой клинок")) {
+        let multHit = mult - 1;
+        return `Атака оружием (+${multHit}d8 грома). При движении цель получает ${mult}d8 грома.`;
+    }
+    if (name.includes("Зелёное пламя") || name.includes("Зеленое пламя")) {
+        let extra = mult - 1;
+        return `Атака оружием (+${extra}d8 огня). Вторая цель получает ${extra}d8 + мод.хар. огня.`;
+    }
+
+    return desc.replace(/(\d+)d(4|6|8|10|12)/g, (match, count, die) => `${parseInt(count) * mult}d${die}`);
+}
+
 var currentRacesData = {};
 var currentSubraceData = {};
 let character = {
@@ -84,8 +108,9 @@ function nextScreen(id) {
     else document.getElementById('dice-container').classList.add('hidden');
 }
 
-function openModal(id) { document.getElementById(id).classList.remove('hidden'); }
-function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
+let _openModalCount = 0;
+function openModal(id) { document.getElementById(id).classList.remove('hidden'); _openModalCount++; document.body.style.overflow = 'hidden'; }
+function closeModal(id) { document.getElementById(id).classList.add('hidden'); _openModalCount = Math.max(0, _openModalCount - 1); if (_openModalCount === 0) document.body.style.overflow = ''; }
 function closeOnBackdrop(event, id) { if (event.target.id === id) closeModal(id); }
 function toggleDiceMenu() { document.getElementById('dice-menu').classList.toggle('hidden'); }
 
@@ -221,6 +246,9 @@ function setBackground(bg) {
     else if (bg === "Беспризорник") { character.skillsProf.slg = true; character.skillsProf.ste = true; }
     else if (bg === "Учёный") { character.skillsProf.arc = true; character.skillsProf.his = true; }
 
+        else if (bg === "Агент Дома") { character.skillsProf.inv = true; character.skillsProf.per = true; }
+    else if (bg === "Преследуемый") { character.skillsProf.inv = true; character.skillsProf.sur = true; }
+    else if (bg === "Сыщик") { character.skillsProf.inv = true; character.skillsProf.ins = true; }
     let classFeatures = "", classProfs = "";
     character.hp = 0; character.maxHp = 0; 
     character.inventory = [];
@@ -296,6 +324,11 @@ function setBackground(bg) {
         classProfs = "Легкие доспехи, простое оружие.";
         classFeatures = "[Колдун 1 ур.]\n- Договор Покровителя.\nЯчейки: 1 (1 круг).";
         addGear("Кинжал"); addGear("Кожаная броня");
+    } else if (character.class === "Изобретатель") {
+        character.savesProf.con = true; character.savesProf.int = true; character.skillsProf.arc = true; character.skillsProf.inv = true;
+        classProfs = "Лёгкий/средний доспех, щиты, простое оружие, воровские инструменты, инструменты жестянщика и ремесленника.";
+        classFeatures = "[Ур 1 Изобретатель.]\n- Магическое ремесло.\n- Заклинания Изобретателя.";
+        addGear("Кожаный доспех"); addGear("Кинжал"); addGear("Кинжал"); addGear("Инструменты вора");
     }
 
     const bgObj = backgroundData[bg];
@@ -349,7 +382,7 @@ function getDBItem(name) {
 }
 
 function openInventoryDB() {
-    document.getElementById('modal-item-db').classList.remove('hidden');
+    openModal('modal-item-db');
     renderDBList('weapons');
 }
 
@@ -523,7 +556,7 @@ function getSpellLevelUpMessage(lvl) {
 
     let cls = cClasses[0]; 
     const full = ["Бард", "Жрец", "Друид", "Волшебник", "Чародей"];
-    const half = ["Паладин", "Следопыт"];
+    const half = ["Паладин", "Следопыт", "Изобретатель"];
     
     if (isThirdCaster && lvl >= 3) {
         let maxLvl = 1;
@@ -590,11 +623,11 @@ function showLevelUpModal(oldLvl, newLvl, subclassOpts) {
     }
 
     container.innerHTML = html;
-    document.getElementById("modal-levelup").classList.remove("hidden");
+    openModal('modal-levelup');
 }
 
 function commitLevelUp(oldLvl, newLvl, chosenSubclass) {
-    document.getElementById("modal-levelup").classList.add("hidden");
+    closeModal('modal-levelup');
     if (chosenSubclass) character.subclass = chosenSubclass;
 
     let newAbilities = [];
@@ -802,7 +835,7 @@ function updateCalculations() {
     let clsStr = (character.class || "").toLowerCase();
     if (clsStr.includes("варвар")) { hpBase = 12; hpPerLevel = 7; }
     else if (["воин", "паладин", "следопыт"].some(c => clsStr.includes(c))) { hpBase = 10; hpPerLevel = 6; }
-    else if (["жрец", "бард", "друид", "монах", "плут", "колдун"].some(c => clsStr.includes(c))) { hpBase = 8; hpPerLevel = 5; }
+    else if (["жрец", "бард", "друид", "монах", "плут", "колдун", "изобретатель"].some(c => clsStr.includes(c))) { hpBase = 8; hpPerLevel = 5; }
     else if (["волшебник", "чародей"].some(c => clsStr.includes(c))) { hpBase = 6; hpPerLevel = 4; }
 
     if (hpBase > 0) {
@@ -934,6 +967,7 @@ function updateCalculations() {
                 
                 desc = desc.replace(/\+\s*мод\.?\s*магии/gi, modStr);
                 desc = desc.replace(/\+\s*мод\.?/gi, modStr);
+                if (sp.level === 0 || (dbSp && dbSp.level === 0)) desc = scaleCantripDesc(sp.name, desc, character.level);
 
                 autoAttacksHTML += `<div style="display:flex; justify-content:space-between; border-bottom:1px solid #ddd; font-size:0.85rem; padding: 4px 0;">
                     <span style="font-weight:bold; width: 35%;">${sp.name}</span><span style="width: 65%; text-align:right;">${desc}</span>
@@ -1014,6 +1048,7 @@ function getBaseCasterClasses() {
     if (cls.includes("паладин") && character.level >= 2) classes.push("Паладин");
     if (cls.includes("следопыт") && character.level >= 2) classes.push("Следопыт");
 
+    if (cls.includes("изобретатель")) classes.push("Изобретатель");
     if (classes.length === 0) {
         if (["эльф", "тифлинг", "драконорожденный", "гном"].some(r => race.includes(r))) {
             classes.push("Раса"); 
@@ -1293,6 +1328,7 @@ function getMaxSpellLevel() {
     if (sub.includes("мистический рыцарь") || sub.includes("мистический ловкач")) type = "third";
     else if (["Бард", "Жрец", "Друид", "Волшебник", "Чародей"].some(c => cClasses.includes(c))) type = "full";
     else if (["Паладин", "Следопыт"].some(c => cClasses.includes(c))) type = "half";
+    else if (cClasses.includes("Изобретатель")) type = "artificer";
     else if (cClasses.includes("Колдун")) type = "warlock";
     
     if (type === "none") return 0;
@@ -1300,6 +1336,7 @@ function getMaxSpellLevel() {
     const maxLevels = {
         full:  [0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8, 8, 9, 9, 9, 9],
         half:  [0, 0, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5],
+        artificer: [0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5],
         third: [0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 4, 4],
         warlock: [0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8, 8, 9, 9, 9, 9]
     };
@@ -1315,6 +1352,7 @@ function getMaxSlots(charLvl, spellLvl) {
     if (sub.includes("мистический рыцарь") || sub.includes("мистический ловкач")) type = "third";
     else if (["Бард", "Жрец", "Друид", "Волшебник", "Чародей"].some(c => cClasses.includes(c))) type = "full";
     else if (["Паладин", "Следопыт"].some(c => cClasses.includes(c))) type = "half";
+    else if (cClasses.includes("Изобретатель")) type = "artificer";
     else if (cClasses.includes("Колдун")) type = "warlock";
     
     if (type === "none") return 0;
@@ -1350,6 +1388,11 @@ function getMaxSlots(charLvl, spellLvl) {
         3: [0, 0,0,0,0,0,0,0,0,2,2,3,3,3,3,3,3,3,3,3,3], 4: [0, 0,0,0,0,0,0,0,0,0,0,0,0,1,1,2,2,3,3,3,3],
         5: [0, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,2,2]
     };
+    const artificerSlots = {
+        1: [0, 2,2,3,3,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4], 2: [0, 0,0,0,0,2,2,3,3,3,3,3,3,3,3,3,3,3,3,3,3],
+        3: [0, 0,0,0,0,0,0,0,0,2,2,3,3,3,3,3,3,3,3,3,3], 4: [0, 0,0,0,0,0,0,0,0,0,0,0,0,1,1,2,2,3,3,3,3],
+        5: [0, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,2,2]
+    };
     const thirdSlots = {
         1: [0, 0,0,2,3,3,3,4,4,4,4,4,4,4,4,4,4,4,4,4,4], 2: [0, 0,0,0,0,0,0,2,2,2,3,3,3,3,3,3,3,3,3,3,3],
         3: [0, 0,0,0,0,0,0,0,0,0,0,0,0,2,2,2,3,3,3,3,3], 4: [0, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1]
@@ -1357,6 +1400,7 @@ function getMaxSlots(charLvl, spellLvl) {
     
     if (type === "full") return fullSlots[spellLvl]?.[lvl] || 0;
     if (type === "half") return halfSlots[spellLvl]?.[lvl] || 0;
+    if (type === "artificer") return artificerSlots[spellLvl]?.[lvl] || 0;
     if (type === "third") return thirdSlots[spellLvl]?.[lvl] || 0;
     return 0;
 }
@@ -1389,7 +1433,7 @@ function autoSelectSpells() {
 
 function hasCantrips() {
     let cClasses = getBaseCasterClasses();
-    return cClasses.some(c => ["Бард", "Жрец", "Друид", "Волшебник", "Чародей", "Колдун", "Раса"].includes(c));
+    return cClasses.some(c => ["Бард", "Жрец", "Друид", "Волшебник", "Чародей", "Колдун", "Раса", "Изобретатель", "изобретатель"].includes(c));
 }
 
 function openSpellbook() {
@@ -1480,6 +1524,7 @@ function renderSpellbookList() {
         
         desc = desc.replace(/\+\s*мод\.?\s*магии/gi, modStr);
         desc = desc.replace(/\+\s*мод\.?/gi, modStr);
+                if (sp.level === 0 || (dbSp && dbSp.level === 0)) desc = scaleCantripDesc(sp.name, desc, character.level);
 
         return `<div class="inv-item-row" style="display:flex; justify-content:space-between; align-items:center; padding: 8px; border-bottom: 1px solid #ddd; font-size: 0.95rem; gap: 10px;">
             <div style="flex:1;">
@@ -1508,7 +1553,7 @@ function toggleSpellSlot(level, slotKey) {
 }
 
 function openSpellDB() {
-    document.getElementById('modal-spell-db').classList.remove('hidden');
+    openModal('modal-spell-db');
     let container = document.getElementById('spell-db-list-container');
     
     let cClasses = getBaseCasterClasses();
@@ -1710,6 +1755,20 @@ function mergeExpansions() {
             }
         });
     }
+    
+    
+    // Toggle HTML visibility for expansion classes/backgrounds
+    let artEl = document.getElementById("class-artificer");
+    if(artEl) artEl.style.display = (character.useERLW || character.useTCE) ? "block" : "none";
+    
+    let haEl = document.getElementById("bg-house-agent");
+    if(haEl) haEl.style.display = character.useERLW ? "block" : "none";
+    
+    let hoEl = document.getElementById("bg-haunted-one");
+    if(hoEl) hoEl.style.display = character.useTCE ? "block" : "none"; // tying Haunted One to TCE for simplicity
+    
+    let invEl = document.getElementById("bg-investigator");
+    if(invEl) invEl.style.display = character.useXGE ? "block" : "none"; // tying Investigator to XGE
     
     renderRaces();
 }

@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
@@ -88,6 +88,7 @@
             <div class="card" onclick="setClass('Бард')"><h3>Бард</h3><p class="accent">HP: 8 + ТЕЛ | Магия</p></div>
             <div class="card" onclick="setClass('Воин')"><h3>Воин</h3><p class="accent">HP: 10 + ТЕЛ</p></div>
             <div class="card" onclick="setClass('Волшебник')"><h3>Волшебник</h3><p class="accent">HP: 6 + ТЕЛ | Магия</p></div>
+            <div id="class-artificer" style="display: none;" class="card expansion-class" onclick="setClass('Изобретатель')"><h3>Изобретатель</h3><p class="accent">HP: 8 + Тел | Интеллект</p></div>
             <div class="card" onclick="setClass('Друид')"><h3>Друид</h3><p class="accent">HP: 8 + ТЕЛ | Магия</p></div>
             <div class="card" onclick="setClass('Жрец')"><h3>Жрец</h3><p class="accent">HP: 8 + ТЕЛ | Магия</p></div>
             <div class="card" onclick="setClass('Колдун')"><h3>Колдун</h3><p class="accent">HP: 8 + ТЕЛ | Магия</p></div>
@@ -126,6 +127,9 @@
             <div class="card bg-card" onclick="setBackground('Моряк')"><h3>Моряк</h3></div>
             <div class="card bg-card" onclick="setBackground('Солдат')"><h3>Солдат</h3></div>
             <div class="card bg-card" onclick="setBackground('Беспризорник')"><h3>Беспризорник</h3></div>
+            <div id="bg-house-agent" style="display: none;" class="card bg-card expansion-bg" onclick="setBackground('Агент Дома')"><h3>Агент Дома</h3></div>
+            <div id="bg-haunted-one" style="display: none;" class="card bg-card expansion-bg" onclick="setBackground('Преследуемый')"><h3>Преследуемый</h3></div>
+            <div id="bg-investigator" style="display: none;" class="card bg-card expansion-bg" onclick="setBackground('Сыщик')"><h3>Сыщик</h3></div>
             <div class="card bg-card" onclick="setBackground('Учёный')"><h3>Учёный</h3></div>
         </div>
     </section>
@@ -240,7 +244,7 @@
             <div class="dice-buttons">
                 <button type="button" onclick="rollDice(4)">d4</button><button type="button" onclick="rollDice(6)">d6</button>
                 <button type="button" onclick="rollDice(8)">d8</button><button type="button" onclick="rollDice(10)">d10</button>
-                <button type="button" onclick="rollDice(12)">d12</button><button type="button" onclick="rollDice(20)" class="d20-btn">d20</button>
+                <button type="button" onclick="rollDice(12)">d12</button><button type="button" onclick="rollDice(20)" class="d20-btn">d20</button><button type="button" onclick="rollDice(100)">d100</button>
             </div>
             <div id="dice-result" class="dice-result">-</div>
         </div>
@@ -502,3 +506,8 @@
 <script src="app.js"></script>
 </body>
 </html>
+
+
+
+
+
