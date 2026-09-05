@@ -2,7 +2,7 @@
 function scaleCantripDesc(name, desc, level) {
     if (level < 5 || !desc) return desc;
     let mult = level >= 17 ? 4 : (level >= 11 ? 3 : 2);
-    const noScale = ["Указание", "Сопротивление", "Свет", "Чудотворство", "Друидизм", "Фокусы", "Послание", "Починка", "Волшебная рука", "Малая иллюзия", "Пляшущие огоньки", "Формирование воды", "Уход за умирающим", "Дубинка (Шиллела)"];
+    const noScale = ["Указание", "Сопротивление", "Свет", "Чудотворство", "Друидизм", "Фокусы", "Послание", "Сообщение", "Починка", "Волшебная рука", "Малая иллюзия", "Пляшущие огоньки", "Формирование воды", "Уход за умирающим", "Дубинка (Шиллела)"];
     if (noScale.includes(name)) return desc;
     
     if (name === "Мистический заряд") {
@@ -71,7 +71,13 @@ window.onload = () => {
         historyStack.push(JSON.stringify(character));
     }
     if (typeof character.useXGE === "undefined") character.useXGE = false;
+    if (typeof character.useTCE === "undefined") character.useTCE = false;
+    if (typeof character.useMPMM === "undefined") character.useMPMM = false;
+    if (typeof character.useFTD === "undefined") character.useFTD = false;
+    if (typeof character.useERLW === "undefined") character.useERLW = false;
+    if (typeof character.useEGW === "undefined") character.useEGW = false;
     mergeExpansions();
+    syncExpansionCheckboxes();
     applyTheme(); 
 };
 
@@ -106,6 +112,9 @@ function nextScreen(id) {
         }, 50);
     }
     else document.getElementById('dice-container').classList.add('hidden');
+    if(id === 'screen-expansions') {
+        syncExpansionCheckboxes();
+    }
 }
 
 let _openModalCount = 0;
@@ -121,6 +130,7 @@ function loadGame() {
     if(!character.spells) character.spells = [];
     if(!character.usedSlots) character.usedSlots = {};
     migrateInventory();
+    mergeExpansions();
     updateAllUI();
     nextScreen('screen-sheet');
     setTimeout(() => {
@@ -1152,6 +1162,7 @@ function updateAllUI() {
     }
 
     renderInventory(); updateCalculations();
+    syncExpansionCheckboxes();
 }
 
 function showBookDescription(type) {
@@ -1437,6 +1448,7 @@ function hasCantrips() {
 }
 
 function openSpellbook() {
+    mergeExpansions();
     let startLvl = hasCantrips() ? 0 : 1;
     renderSpellTabs(); 
     selectSpellTab(startLvl); 
@@ -1553,6 +1565,7 @@ function toggleSpellSlot(level, slotKey) {
 }
 
 function openSpellDB() {
+    mergeExpansions();
     openModal('modal-spell-db');
     let container = document.getElementById('spell-db-list-container');
     
@@ -1682,11 +1695,28 @@ function deleteSpellPreset(name) {
 }
 
 
+function syncExpansionCheckboxes() {
+    if (!character) return;
+    const expKeys = [
+        { key: 'useXGE', id: 'toggle-xge-main' },
+        { key: 'useTCE', id: 'toggle-tce-main' },
+        { key: 'useMPMM', id: 'toggle-mpmm-main' },
+        { key: 'useFTD', id: 'toggle-ftd-main' },
+        { key: 'useERLW', id: 'toggle-erlw-main' },
+        { key: 'useEGW', id: 'toggle-egw-main' }
+    ];
+    expKeys.forEach(item => {
+        let el = document.getElementById(item.id);
+        if (el) el.checked = !!character[item.key];
+    });
+}
+
 function toggleExpansion(key, isChecked) {
     if (!character) character = {};
     character[key] = isChecked;
     saveGame();
     mergeExpansions();
+    syncExpansionCheckboxes();
     updateAllUI();
 }
 

@@ -1,1 +1,1 @@
-﻿const spellsERLW = [];
+const spellsERLW = [];
