@@ -1,0 +1,29 @@
+{
+  "name": "D&D Character Manager",
+  "short_name": "D&D Manager",
+  "description": "Менеджер персонажей D&D прямо в браузере",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#111827",
+  "theme_color": "#111827",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "favicon.png",
+      "sizes": "133x133",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}
