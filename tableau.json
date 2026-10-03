@@ -1,0 +1,9 @@
+{
+  "version": "1.0",
+  "api_version": 1,
+  "layout": {
+    "logo": "icon-512.png",
+    "color": "#111827",
+    "show_title": false
+  }
+}
